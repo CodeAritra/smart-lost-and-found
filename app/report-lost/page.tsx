@@ -15,6 +15,9 @@ import { useRouter } from "next/navigation"
 
 export default function ReportLostPage() {
   const router = useRouter()
+
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
   const [formData, setFormData] = useState({
     category: "",
     description: "",
@@ -22,6 +25,24 @@ export default function ReportLostPage() {
     time: "",
     noPhoto: false,
   })
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImage(file)
+    setImagePreview(URL.createObjectURL(file))
+  }
+
+  const handleNoPhotoChange = (checked: boolean) => {
+    setFormData({ ...formData, noPhoto: checked })
+
+    if (checked) {
+      setImage(null)
+      setImagePreview(null)
+    }
+  }
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -120,6 +141,42 @@ export default function ReportLostPage() {
                 className="rounded-lg h-10"
               />
             </div>
+
+            {/* Image Upload */}
+            {!formData.noPhoto && (
+              <div>
+                <Label className="text-base font-semibold text-foreground mb-2 block">
+                  Upload Item Photo
+                </Label>
+
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:bg-muted transition">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="imageUpload"
+                    onChange={handleImageChange}
+                  />
+
+                  <label htmlFor="imageUpload" className="cursor-pointer block">
+                    {!imagePreview ? (
+                      <p className="text-muted-foreground text-sm">
+                        Click to upload an image
+                      </p>
+                    ) : (
+                      <div className="flex justify-center">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="max-h-48 rounded-lg object-contain"
+                        />
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+            )}
+
 
             {/* No Photo Toggle */}
             <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">

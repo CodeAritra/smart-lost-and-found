@@ -4,14 +4,27 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Search, Package, MessageSquare, LogOut } from "lucide-react"
 import Link from "next/link"
+import { onAuthStateChanged } from "firebase/auth"
+import { auth } from "@/lib/firebase"
+import { useEffect } from "react"
+import { logout } from "@/lib/firebaseAuth"
+import { useAuth } from "@/context/authContext"
+import { useRouter } from "next/navigation"
 
 export default function DashboardPage() {
-  const handleLogout = () => {
-    window.location.href = "/"
+  const { user, loading } = useAuth()
+  const router = useRouter()
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/login")
   }
 
+  if (loading) return <p>Loading...</p>
+
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <main className="min-h-screen bg-linear-to-br from-background via-background to-muted">
       {/* Header */}
       <header className="bg-white dark:bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">

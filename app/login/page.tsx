@@ -2,17 +2,28 @@
 
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { useAuth } from "@/context/authContext"
+import { login } from "@/lib/firebaseAuth"
 import { Shield, Mail } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { useEffect } from "react"
 
 export default function LoginPage() {
-  const handleGoogleSignIn = () => {
-    // Mock Google Sign-In
+  const { user, loading } = useAuth()
+  const router = useRouter()
+  const handleGoogleSignIn = async () => {
+    await login()
     console.log("Signing in with Google...")
-    window.location.href = "/dashboard"
   }
 
+  useEffect(() => {
+    if (!loading && user) {
+      router.push("/dashboard")
+    }
+  }, [user, loading, router])
+
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted flex items-center justify-center px-4">
+    <main className="min-h-screen bg-linear-to-br from-background via-background to-muted flex items-center justify-center px-4">
       <Card className="w-full max-w-md p-8 rounded-2xl border-0 shadow-lg">
         <div className="text-center mb-8">
           <div className="bg-primary/10 w-14 h-14 rounded-lg flex items-center justify-center mx-auto mb-4">
