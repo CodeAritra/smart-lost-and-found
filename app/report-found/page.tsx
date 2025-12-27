@@ -13,8 +13,13 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { ArrowLeft, Package } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { reportFoundItem } from "@/lib/report"
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload"
+import { useAuth } from "@/context/authContext"
 
 export default function ReportFoundPage() {
+  const { user } = useAuth()
+
   const router = useRouter()
   const [formData, setFormData] = useState({
     category: "",
@@ -25,11 +30,71 @@ export default function ReportFoundPage() {
     sensitiveItem: false,
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    // Navigate to match results page
-    router.push("/match-result")
+  const [image, setImage] = useState<File | null>(null)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setImage(file)
+    setImagePreview(URL.createObjectURL(file))
   }
+
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    if (!user) {
+      alert("Please login first")
+      return
+    }
+
+    try {
+      // Validation
+      if (!formData.category || !formData.location) {
+        alert("Category and location are required")
+        return
+      }
+
+      // If NOT sensitive → image is mandatory
+      if (!formData.sensitiveItem && !image) {
+        alert("Please upload an image of the found item")
+        return
+      }
+
+      let imageUrl: string | undefined = undefined
+
+      // Upload image only if not sensitive
+      if (!formData.sensitiveItem && image) {
+        imageUrl = await uploadToCloudinary(image)
+      }
+
+      const payload: any = {
+        userId: user.uid,
+        category: formData.category,
+        brand: formData.brand || null,
+        color: formData.color || null,
+        location: formData.location,
+        condition: formData.condition || null,
+        sensitiveItem: formData.sensitiveItem,
+        status: "unclaimed",
+        createdAt: new Date(),
+      }
+
+      if (imageUrl) {
+        payload.imageUrl = imageUrl
+      }
+
+      await reportFoundItem(payload)
+
+      router.push("/match-result")
+    } catch (err) {
+      console.error(err)
+      alert("Something went wrong. Try again.")
+    }
+  }
+
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
@@ -66,7 +131,7 @@ export default function ReportFoundPage() {
                 <SelectTrigger id="category" className="rounded-lg h-10">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border border-border shadow-lg">
                   <SelectItem value="keys">Keys</SelectItem>
                   <SelectItem value="wallet">Wallet</SelectItem>
                   <SelectItem value="phone">Phone</SelectItem>
@@ -136,6 +201,42 @@ export default function ReportFoundPage() {
                 className="rounded-lg min-h-24"
               />
             </div>
+
+            {/* Image */}
+            {!formData.sensitiveItem && (
+              <div>
+                <Label className="text-base font-semibold text-foreground mb-2 block">
+                  Upload Item Photo
+                </Label>
+
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:bg-muted transition">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    id="imageUpload"
+                    onChange={handleImageChange}
+                  />
+
+                  <label htmlFor="imageUpload" className="cursor-pointer block">
+                    {!imagePreview ? (
+                      <p className="text-muted-foreground text-sm">
+                        Click to upload an image
+                      </p>
+                    ) : (
+                      <div className="flex justify-center">
+                        <img
+                          src={imagePreview}
+                          alt="Preview"
+                          className="max-h-48 rounded-lg object-contain"
+                        />
+                      </div>
+                    )}
+                  </label>
+                </div>
+              </div>
+            )}
+
 
             {/* Sensitive Item */}
             <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
