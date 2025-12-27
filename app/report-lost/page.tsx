@@ -88,7 +88,7 @@ export default function ReportLostPage() {
 
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <main className="min-h-screen bg-linear-to-br from-background via-background to-muted">
       {/* Header */}
       <header className="bg-white dark:bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
