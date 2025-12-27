@@ -12,9 +12,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ArrowLeft, Search } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
+import { uploadToCloudinary } from "@/lib/cloudinaryUpload"
+import { reportLostItem } from "@/lib/report"
+import { useAuth } from "@/context/authContext"
 
 export default function ReportLostPage() {
   const router = useRouter()
+
+  const { user } = useAuth()
 
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
@@ -23,7 +28,7 @@ export default function ReportLostPage() {
     description: "",
     location: "",
     time: "",
-    noPhoto: false,
+    noPhoto: false
   })
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,12 +48,44 @@ export default function ReportLostPage() {
     }
   }
 
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Navigate to match results page
-    router.push("/match-result")
+
+    if (!user) {
+      alert("Please login first")
+      return
+    }
+
+    try {
+      let imageUrl: string | undefined = undefined
+
+      // Upload image if exists
+      if (image && !formData.noPhoto) {
+        imageUrl = await uploadToCloudinary(image)
+      }
+
+      const payload: any = {
+        userId: user.uid,
+        category: formData.category,
+        description: formData.description,
+        location: formData.location,
+        time: formData.time ? new Date(formData.time) : null,
+      }
+
+      // Only attach imageUrl if it exists
+      if (imageUrl) {
+        payload.imageUrl = imageUrl
+      }
+
+      await reportLostItem(payload)
+
+      router.push("/match-result")
+    } catch (err) {
+      console.error(err)
+      alert("Something went wrong. Try again.")
+    }
   }
+
 
   return (
     <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
@@ -74,7 +111,7 @@ export default function ReportLostPage() {
         <Card className="p-8 rounded-2xl border-0 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Category */}
-            <div>
+            <div >
               <Label htmlFor="category" className="text-base font-semibold text-foreground mb-2 block">
                 Item Category
               </Label>
@@ -85,7 +122,7 @@ export default function ReportLostPage() {
                 <SelectTrigger id="category" className="rounded-lg h-10">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-background border border-border shadow-lg">
                   <SelectItem value="keys">Keys</SelectItem>
                   <SelectItem value="wallet">Wallet</SelectItem>
                   <SelectItem value="phone">Phone</SelectItem>
