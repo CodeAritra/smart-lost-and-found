@@ -88,7 +88,7 @@ export default function ReportFoundPage() {
 
       await reportFoundItem(payload)
 
-      router.push("/match-result")
+      router.push("/dashboard")
     } catch (err) {
       console.error(err)
       alert("Something went wrong. Try again.")

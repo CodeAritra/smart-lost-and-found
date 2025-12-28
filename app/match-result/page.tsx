@@ -29,7 +29,7 @@ export default function MatchResultPage() {
       location: "Student Center",
       color: "Brown",
       date: "Dec 21, 2024",
-      isSensitive: false,
+      isSensitive: true,
     },
   ]
 
