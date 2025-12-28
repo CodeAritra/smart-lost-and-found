@@ -54,7 +54,7 @@ export default function VerifyOwnershipPage() {
         //  Fetch & extract signals once
         const extractedSignals = await fetchFoundItemAndSignals();
         setSignals(extractedSignals);
-        console.log("\nextracted signals = ", extractedSignals)
+        // console.log("\nextracted signals = ", extractedSignals)
 
         //  Generate AI questions
         const aiQuestions = await generateQuestions(extractedSignals);
@@ -70,7 +70,7 @@ export default function VerifyOwnershipPage() {
   }, [params.id]);
 
 
-  useEffect(() => { console.log("\nquestions = ", questions, "\ndecision = ", decision, "\n signals = ", signals) }, [questions, decision, signals])
+  // useEffect(() => { console.log("\nquestions = ", questions, "\ndecision = ", decision, "\n signals = ", signals) }, [questions, decision, signals])
 
 
   /* ---------------- HANDLERS ---------------- */
@@ -102,7 +102,7 @@ export default function VerifyOwnershipPage() {
         const expected = signals[q.id];
         const userAnswer = answers[q.id];
 
-        console.log("\nOg ans = ", expected, "\nuser answer = ", userAnswer)
+        // console.log("\nOg ans = ", expected, "\nuser answer = ", userAnswer)
 
         if (!expected || !userAnswer) continue;
 
