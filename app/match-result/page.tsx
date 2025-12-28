@@ -45,7 +45,7 @@ export default function MatchResultPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <main className="min-h-screen bg-linear-to-br from-background via-background to-muted">
       {/* Header */}
       <header className="bg-white dark:bg-card border-b border-border sticky top-0 z-10">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -98,7 +98,7 @@ export default function MatchResultPage() {
 
               {match.isSensitive && (
                 <div className="flex items-start gap-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg mb-4 border border-amber-200 dark:border-amber-800">
-                  <AlertCircle className="h-5 w-5 text-amber-600 flex-shrink-0 mt-0.5" />
+                  <AlertCircle className="h-5 w-5 text-amber-600 shrink-0 mt-0.5" />
                   <p className="text-sm text-amber-800 dark:text-amber-200">
                     This is a sensitive item. You'll need to answer verification questions.
                   </p>
@@ -117,7 +117,7 @@ export default function MatchResultPage() {
 
         <Card className="mt-8 p-6 rounded-2xl border-0 shadow-sm bg-muted/50">
           <div className="flex items-start gap-3">
-            <AlertCircle className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
+            <AlertCircle className="h-5 w-5 text-primary shrink-0 mt-0.5" />
             <div>
               <h4 className="font-semibold text-foreground mb-1">Don't see your item?</h4>
               <p className="text-sm text-muted-foreground mb-3">

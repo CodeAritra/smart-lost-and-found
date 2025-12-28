@@ -125,6 +125,7 @@ type ItemType = "lost" | "found"
 
 interface Item {
   id: string
+  name:string
   category: string
   description?: string
   condition?: string
@@ -146,6 +147,7 @@ interface ItemCardProps {
 function ItemCard({ item, type }: ItemCardProps) {
   const { user } = useAuth()
 
+  const router = useRouter()
   const isMyReport = item.userId === user?.uid
 
   return (
@@ -189,7 +191,7 @@ function ItemCard({ item, type }: ItemCardProps) {
 
             {/* Description */}
             <p className="text-sm text-muted-foreground line-clamp-2">
-              {item.description || item.condition}
+              {item.name}
             </p>
 
             {/* Location */}
@@ -215,7 +217,7 @@ function ItemCard({ item, type }: ItemCardProps) {
                 View Ownership
               </Button>
             ) : type === 'found' ? (
-              <Button size="sm">
+              <Button size="sm" onClick={() => router.push(`/verify-ownership/${item.id}`)}>
                 <Hand className="h-4 w-4 mr-1" />
                 Claim Ownership
               </Button>

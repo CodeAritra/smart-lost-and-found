@@ -18,17 +18,21 @@ import { useAuth } from "@/context/authContext"
 
 export default function ReportLostPage() {
   const router = useRouter()
-
   const { user } = useAuth()
 
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+
+  // ✅ UPDATED STATE
   const [formData, setFormData] = useState({
     category: "",
+    name: "",
+    brand: "",
+    color: "",
     description: "",
     location: "",
     time: "",
-    noPhoto: false
+    noPhoto: false,
   })
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,15 +41,6 @@ export default function ReportLostPage() {
 
     setImage(file)
     setImagePreview(URL.createObjectURL(file))
-  }
-
-  const handleNoPhotoChange = (checked: boolean) => {
-    setFormData({ ...formData, noPhoto: checked })
-
-    if (checked) {
-      setImage(null)
-      setImagePreview(null)
-    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,35 +52,46 @@ export default function ReportLostPage() {
     }
 
     try {
+      // ✅ VALIDATION
+      if (!formData.category || !formData.name || !formData.location) {
+        alert("Category, item name, and location are required")
+        return
+      }
+
       let imageUrl: string | undefined = undefined
 
-      // Upload image if exists
+      // Upload image if provided
       if (image && !formData.noPhoto) {
         imageUrl = await uploadToCloudinary(image)
       }
 
+      // ✅ UPDATED PAYLOAD
       const payload: any = {
         userId: user.uid,
+
         category: formData.category,
-        description: formData.description,
+        name: formData.name,
+
+        brand: formData.brand || null,
+        color: formData.color || null,
+
+        description: formData.description || null,
         location: formData.location,
+
         time: formData.time ? new Date(formData.time) : null,
       }
 
-      // Only attach imageUrl if it exists
       if (imageUrl) {
         payload.imageUrl = imageUrl
       }
 
       await reportLostItem(payload)
-
       router.push("/dashboard")
     } catch (err) {
       console.error(err)
       alert("Something went wrong. Try again.")
     }
   }
-
 
   return (
     <main className="min-h-screen bg-linear-to-br from-background via-background to-muted">
@@ -104,22 +110,28 @@ export default function ReportLostPage() {
 
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-foreground mb-2">Report Lost Item</h1>
-          <p className="text-muted-foreground">Help us find your item by providing details and a description</p>
+          <h1 className="text-3xl font-bold text-foreground mb-2">
+            Report Lost Item
+          </h1>
+          <p className="text-muted-foreground">
+            Help us find your item by providing details and a description
+          </p>
         </div>
 
         <Card className="p-8 rounded-2xl border-0 shadow-lg">
           <form onSubmit={handleSubmit} className="space-y-6">
             {/* Category */}
-            <div >
-              <Label htmlFor="category" className="text-base font-semibold text-foreground mb-2 block">
+            <div>
+              <Label className="text-base font-semibold text-foreground mb-2 block">
                 Item Category
               </Label>
               <Select
                 value={formData.category}
-                onValueChange={(value) => setFormData({ ...formData, category: value })}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, category: value })
+                }
               >
-                <SelectTrigger id="category" className="rounded-lg h-10">
+                <SelectTrigger className="rounded-lg h-10">
                   <SelectValue placeholder="Select a category" />
                 </SelectTrigger>
                 <SelectContent className="bg-background border border-border shadow-lg">
@@ -135,31 +147,78 @@ export default function ReportLostPage() {
               </Select>
             </div>
 
+            {/* ✅ Item Name */}
+            <div>
+              <Label className="text-base font-semibold text-foreground mb-2 block">
+                Item Name
+              </Label>
+              <Input
+                placeholder="e.g., iPhone 13, Black Wallet"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="rounded-lg h-10"
+                required
+              />
+            </div>
+
+            {/* Brand */}
+            <div>
+              <Label className="text-base font-semibold text-foreground mb-2 block">
+                Brand (optional)
+              </Label>
+              <Input
+                placeholder="e.g., Apple, Nike"
+                value={formData.brand}
+                onChange={(e) =>
+                  setFormData({ ...formData, brand: e.target.value })
+                }
+                className="rounded-lg h-10"
+              />
+            </div>
+
+            {/* Color */}
+            <div>
+              <Label className="text-base font-semibold text-foreground mb-2 block">
+                Color
+              </Label>
+              <Input
+                placeholder="e.g., Black, Blue"
+                value={formData.color}
+                onChange={(e) =>
+                  setFormData({ ...formData, color: e.target.value })
+                }
+                className="rounded-lg h-10"
+              />
+            </div>
+
             {/* Description */}
             <div>
-              <Label htmlFor="description" className="text-base font-semibold text-foreground mb-2 block">
+              <Label className="text-base font-semibold text-foreground mb-2 block">
                 Description
               </Label>
               <Textarea
-                id="description"
-                placeholder="Describe your lost item in detail (color, brand, distinctive marks, etc.)"
+                placeholder="Distinctive marks, accessories, stickers, etc."
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 className="rounded-lg min-h-24"
-                required
               />
             </div>
 
             {/* Location */}
             <div>
-              <Label htmlFor="location" className="text-base font-semibold text-foreground mb-2 block">
+              <Label className="text-base font-semibold text-foreground mb-2 block">
                 Where did you lose it?
               </Label>
               <Input
-                id="location"
-                placeholder="e.g., Library, Student Center, Dorm Building"
+                placeholder="e.g., Library, Hostel, Parking"
                 value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, location: e.target.value })
+                }
                 className="rounded-lg h-10"
                 required
               />
@@ -167,14 +226,15 @@ export default function ReportLostPage() {
 
             {/* Time */}
             <div>
-              <Label htmlFor="time" className="text-base font-semibold text-foreground mb-2 block">
+              <Label className="text-base font-semibold text-foreground mb-2 block">
                 Approximate time lost
               </Label>
               <Input
-                id="time"
                 type="datetime-local"
                 value={formData.time}
-                onChange={(e) => setFormData({ ...formData, time: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, time: e.target.value })
+                }
                 className="rounded-lg h-10"
               />
             </div>
@@ -185,8 +245,7 @@ export default function ReportLostPage() {
                 <Label className="text-base font-semibold text-foreground mb-2 block">
                   Upload Item Photo
                 </Label>
-
-                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer hover:bg-muted transition">
+                <div className="border-2 border-dashed border-border rounded-lg p-4 text-center cursor-pointer">
                   <input
                     type="file"
                     accept="image/*"
@@ -194,45 +253,40 @@ export default function ReportLostPage() {
                     id="imageUpload"
                     onChange={handleImageChange}
                   />
-
                   <label htmlFor="imageUpload" className="cursor-pointer block">
                     {!imagePreview ? (
                       <p className="text-muted-foreground text-sm">
                         Click to upload an image
                       </p>
                     ) : (
-                      <div className="flex justify-center">
-                        <img
-                          src={imagePreview}
-                          alt="Preview"
-                          className="max-h-48 rounded-lg object-contain"
-                        />
-                      </div>
+                      <img
+                        src={imagePreview}
+                        alt="Preview"
+                        className="max-h-48 mx-auto rounded-lg object-contain"
+                      />
                     )}
                   </label>
                 </div>
               </div>
             )}
 
-
-            {/* No Photo Toggle */}
+            {/* No Photo */}
             <div className="flex items-center gap-3 p-4 bg-muted rounded-lg">
               <input
-                id="noPhoto"
                 type="checkbox"
                 checked={formData.noPhoto}
-                onChange={(e) => setFormData({ ...formData, noPhoto: e.target.checked })}
-                className="rounded"
+                onChange={(e) =>
+                  setFormData({ ...formData, noPhoto: e.target.checked })
+                }
               />
-              <Label htmlFor="noPhoto" className="cursor-pointer text-foreground font-medium">
+              <Label className="cursor-pointer font-medium">
                 I don't have a photo
               </Label>
             </div>
 
-            {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full bg-primary hover:bg-primary/90 text-primary-foreground rounded-lg h-12 font-semibold mt-8"
+              className="w-full rounded-lg h-12 font-semibold mt-8"
             >
               <Search className="h-5 w-5 mr-2" />
               Find My Item

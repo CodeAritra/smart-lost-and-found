@@ -12,7 +12,7 @@ export default function VerificationResultPage() {
   const isApproved = status === "approved"
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-background via-background to-muted">
+    <main className="min-h-screen bg-linear-to-br from-background via-background to-muted">
       <div className="flex items-center justify-center min-h-screen px-4">
         <Card className="w-full max-w-md p-8 rounded-2xl border-0 shadow-lg text-center">
           <div className="mb-6">

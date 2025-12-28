@@ -28,6 +28,7 @@ export const AuthProvider = ({
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
       setUser(firebaseUser)
+      // console.log("Firebase user = ",firebaseUser?.uid)
       setLoading(false)
     })
 
