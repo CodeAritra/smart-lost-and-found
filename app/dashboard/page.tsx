@@ -125,7 +125,7 @@ type ItemType = "lost" | "found"
 
 interface Item {
   id: string
-  name:string
+  name: string
   category: string
   description?: string
   condition?: string
@@ -211,17 +211,30 @@ function ItemCard({ item, type }: ItemCardProps) {
                 </span>
               </div>
             )}</div>
-            <div>{isMyReport ? (
-              <Button variant="outline" size="sm">
-                <Eye className="h-4 w-4 mr-1" />
-                View Ownership
-              </Button>
-            ) : type === 'found' ? (
-              <Button size="sm" onClick={() => router.push(`/verify-ownership/${item.id}`)}>
-                <Hand className="h-4 w-4 mr-1" />
-                Claim Ownership
-              </Button>
-            ) : null}</div>
+            <div>
+              {isMyReport && type === "lost" ? (
+                <Link href={`/verification-result/${item.id}`}>
+                  <Button variant="outline" size="sm">
+                    <Eye className="h-4 w-4 mr-1" />
+                    Check Status
+                  </Button>
+                </Link>
+              ) : isMyReport && type === "found" ? (
+                <Button variant="outline" size="sm">
+                  <Eye className="h-4 w-4 mr-1" />
+                  View Ownership
+                </Button>
+              ) : !isMyReport && type === "found" ? (
+                <Button
+                  size="sm"
+                  onClick={() => router.push(`/verify-ownership/${item.id}`)}
+                >
+                  <Hand className="h-4 w-4 mr-1" />
+                  Claim Ownership
+                </Button>
+              ) : null}
+            </div>
+
 
           </div>
         </div>
@@ -245,7 +258,7 @@ function MyReports() {
   return (
     <div className="space-y-4">
       {items.map(item => (
-        <ItemCard key={item.id} item={item} type="found" />
+        <ItemCard key={item.id} item={item} type={item.type} />
       ))}
     </div>
   )

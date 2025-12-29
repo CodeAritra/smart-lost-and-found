@@ -23,7 +23,7 @@ export default function ReportLostPage() {
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
 
-  // ✅ UPDATED STATE
+  //  UPDATED STATE
   const [formData, setFormData] = useState({
     category: "",
     name: "",
@@ -52,7 +52,7 @@ export default function ReportLostPage() {
     }
 
     try {
-      // ✅ VALIDATION
+      //  VALIDATION
       if (!formData.category || !formData.name || !formData.location) {
         alert("Category, item name, and location are required")
         return
@@ -65,7 +65,7 @@ export default function ReportLostPage() {
         imageUrl = await uploadToCloudinary(image)
       }
 
-      // ✅ UPDATED PAYLOAD
+      //  UPDATED PAYLOAD
       const payload: any = {
         userId: user.uid,
 
@@ -147,7 +147,7 @@ export default function ReportLostPage() {
               </Select>
             </div>
 
-            {/* ✅ Item Name */}
+            {/*  Item Name */}
             <div>
               <Label className="text-base font-semibold text-foreground mb-2 block">
                 Item Name
