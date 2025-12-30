@@ -7,7 +7,7 @@ import { ArrowLeft, AlertTriangle, Clock, Send } from "lucide-react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 
-interface Message {
+interface Message {  //hello
   id: number
   sender: "user" | "other"
   text: string
