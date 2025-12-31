@@ -1,13 +1,9 @@
 import { db } from "@/lib/firebase"
-import {
-  collection,
-  getDocs,
-  query,
-  where,
-  orderBy,
-} from "firebase/firestore"
+import { collection, getDocs, query, where, orderBy } from "firebase/firestore"
+import type { Item, ItemType } from "../types/item"
 
-export async function getMyReports(userId: string) {
+// Get user-specific reports
+export async function getMyReports(userId: string): Promise<Item[]> {
   const lostQ = query(
     collection(db, "lostItems"),
     where("userId", "==", userId),
@@ -20,31 +16,24 @@ export async function getMyReports(userId: string) {
     orderBy("createdAt", "desc")
   )
 
-  const [lostSnap, foundSnap] = await Promise.all([
-    getDocs(lostQ),
-    getDocs(foundQ),
-  ])
+  const [lostSnap, foundSnap] = await Promise.all([getDocs(lostQ), getDocs(foundQ)])
 
   return [
-    ...lostSnap.docs.map(d => ({ id: d.id, type: "lost", ...d.data() })),
-    ...foundSnap.docs.map(d => ({ id: d.id, type: "found", ...d.data() })),
-  ]
+    ...lostSnap.docs.map(d => ({ id: d.id, type: "lost" as ItemType, ...d.data() })),
+    ...foundSnap.docs.map(d => ({ id: d.id, type: "found" as ItemType, ...d.data() })),
+  ] as Item[]
 }
 
-export async function getGlobalLost() {
-  const q = query(
-    collection(db, "lostItems"),
-    orderBy("createdAt", "desc")
-  )
+// Global lost items
+export async function getGlobalLost(): Promise<Item[]> {
+  const q = query(collection(db, "lostItems"), orderBy("createdAt", "desc"))
   const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs.map(d => ({ id: d.id, type: "lost" as ItemType, ...d.data() })) as Item[]
 }
 
-export async function getGlobalFound() {
-  const q = query(
-    collection(db, "foundItems"),
-    orderBy("createdAt", "desc")
-  )
+// Global found items
+export async function getGlobalFound(): Promise<Item[]> {
+  const q = query(collection(db, "foundItems"), orderBy("createdAt", "desc"))
   const snap = await getDocs(q)
-  return snap.docs.map(d => ({ id: d.id, ...d.data() }))
+  return snap.docs.map(d => ({ id: d.id, type: "found" as ItemType, ...d.data() })) as Item[]
 }

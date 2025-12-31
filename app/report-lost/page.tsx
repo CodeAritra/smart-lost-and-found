@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -22,6 +22,9 @@ export default function ReportLostPage() {
 
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
+
+  // useEffect(() => { console.log("Loading = ", loading) }, [loading])
 
   //  UPDATED STATE
   const [formData, setFormData] = useState({
@@ -52,6 +55,7 @@ export default function ReportLostPage() {
     }
 
     try {
+      setLoading(true)
       //  VALIDATION
       if (!formData.category || !formData.name || !formData.location) {
         alert("Category, item name, and location are required")
@@ -86,10 +90,14 @@ export default function ReportLostPage() {
       }
 
       await reportLostItem(payload)
+      setLoading(false)
       router.push("/dashboard")
     } catch (err) {
       console.error(err)
       alert("Something went wrong. Try again.")
+    }
+    finally {
+      setLoading(false)
     }
   }
 
@@ -287,9 +295,10 @@ export default function ReportLostPage() {
             <Button
               type="submit"
               className="w-full rounded-lg h-12 font-semibold mt-8"
+              disabled={loading}
             >
               <Search className="h-5 w-5 mr-2" />
-              Find My Item
+              {!loading ? "Find My Item" : "Finding..."}
             </Button>
           </form>
         </Card>

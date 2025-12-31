@@ -1,29 +1,64 @@
 "use client"
 
+import { useState, useEffect } from "react"
+import Link from "next/link"
+import { useRouter } from "next/navigation"
+import {
+  Search,
+  Package,
+  MessageSquare,
+  LogOut,
+  PackageSearch,
+  AlertTriangle,
+  User,
+  AlertCircle,
+  Eye,
+  Hand,
+} from "lucide-react"
+
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Search, Package, MessageSquare, LogOut, PackageSearch, AlertTriangle, User, AlertCircle, Eye, Hand } from "lucide-react"
-import Link from "next/link"
-import { onAuthStateChanged } from "firebase/auth"
-import { auth } from "@/lib/firebase"
-import { useEffect } from "react"
-import { logout } from "@/lib/firebaseAuth"
-import { useAuth } from "@/context/authContext"
-import { useRouter } from "next/navigation"
-import { useState } from "react"
 import { cn } from "@/lib/utils"
-import { getGlobalFound, getGlobalLost, getMyReports } from "@/lib/firebaseFetch"
+import { useAuth } from "@/context/authContext"
+import { logout } from "@/lib/firebaseAuth"
+import { getMyReports, getGlobalLost, getGlobalFound } from "@/lib/firebaseFetch"
+
+/* ===================== Types ===================== */
+
+type ItemType = "lost" | "found"
+
+export interface Item {
+  id: string
+  name: string
+  category: string
+  description?: string
+  condition?: string
+  location: string
+  imageUrl?: string
+  userId: string
+  sensitiveItem?: boolean
+  createdAt?: any
+  type: ItemType
+}
+
+interface ItemCardProps {
+  item: Item
+  type: ItemType
+}
+
+/* ===================== Tabs ===================== */
 
 const TABS = [
   { id: "my", label: "My Reports", icon: User },
   { id: "lost", label: "Lost Items", icon: AlertTriangle },
   { id: "found", label: "Found Items", icon: PackageSearch },
-]
+] as const
+
+/* ===================== Dashboard ===================== */
 
 export default function DashboardPage() {
   const [activeTab, setActiveTab] = useState<"my" | "lost" | "found">("my")
-
   const { user, loading } = useAuth()
   const router = useRouter()
 
@@ -32,121 +67,108 @@ export default function DashboardPage() {
     router.push("/login")
   }
 
-  if (loading) return <p>Loading...</p>
-
+  if (loading) return <p className="text-center mt-10">Loading...</p>
 
   return (
     <main className="min-h-screen bg-linear-to-br from-background via-background to-muted">
       {/* Header */}
-      <header className="bg-white dark:bg-card border-b border-border sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard</h1>
-            <Button variant="ghost" onClick={handleLogout} className="rounded-full">
-              <LogOut className="h-5 w-5 mr-2" />
-              <span className="hidden sm:inline">Sign Out</span>
+      <header className="sticky top-0 z-10 border-b bg-white dark:bg-card">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
+          <h1 className="text-xl sm:text-2xl font-bold text-primary">Dashboard</h1>
+
+          <div className="flex items-center gap-2">
+            <Link href="/inbox">
+              <Button variant="outline" size="sm">
+                <MessageSquare className="h-4 w-4 mr-1" />
+                Inbox
+              </Button>
+            </Link>
+
+            <Button variant="ghost" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-1" />
+              Sign Out
             </Button>
           </div>
         </div>
       </header>
 
-      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-6xl mx-auto px-4 py-10">
         {/* Quick Actions */}
-        <div className="mb-12">
-          <h2 className="text-lg font-semibold text-foreground mb-4">What would you like to do?</h2>
+        <section className="mb-12">
+          <h2 className="text-lg font-semibold mb-4">What would you like to do?</h2>
+
           <div className="grid sm:grid-cols-2 gap-4">
             <Link href="/report-lost">
-              <Card className="p-6 rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full">
-                <div className="flex items-center gap-4">
+              <Card className="p-6 rounded-2xl hover:shadow-md cursor-pointer">
+                <div className="flex gap-4">
                   <div className="bg-primary/10 w-12 h-12 rounded-lg flex items-center justify-center">
-                    <Search className="h-6 w-6 text-primary" />
+                    <Search className="text-primary" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">Report Lost Item</h3>
-                    <p className="text-sm text-muted-foreground">Find something you've lost</p>
+                    <h3 className="font-semibold">Report Lost Item</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Find something you've lost
+                    </p>
                   </div>
                 </div>
               </Card>
             </Link>
 
             <Link href="/report-found">
-              <Card className="p-6 rounded-2xl border-0 shadow-sm hover:shadow-md transition-shadow cursor-pointer h-full">
-                <div className="flex items-center gap-4">
+              <Card className="p-6 rounded-2xl hover:shadow-md cursor-pointer">
+                <div className="flex gap-4">
                   <div className="bg-accent/10 w-12 h-12 rounded-lg flex items-center justify-center">
-                    <Package className="h-6 w-6 text-accent" />
+                    <Package className="text-accent" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-foreground">Report Found Item</h3>
-                    <p className="text-sm text-muted-foreground">Help someone recover their item</p>
+                    <h3 className="font-semibold">Report Found Item</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Help someone recover their item
+                    </p>
                   </div>
                 </div>
               </Card>
             </Link>
           </div>
+        </section>
+
+        {/* Tabs */}
+        <div className="flex gap-2 mb-6">
+          {TABS.map((tab) => {
+            const Icon = tab.icon
+            return (
+              <Button
+                key={tab.id}
+                variant="outline"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "rounded-full px-5 flex gap-2 cursor-pointer",
+                  activeTab === tab.id &&
+                  "bg-primary text-primary-foreground hover:bg-primary"
+                )}
+              >
+                <Icon className="h-4 w-4" />
+                {tab.label}
+              </Button>
+            )
+          })}
         </div>
 
-        {/* Recent Activity */}
-        <div className="w-full">
-          {/* Tabs Header */}
-          <div className="flex gap-2 mb-6">
-            {TABS.map((tab) => {
-              const Icon = tab.icon
-              return (
-                <Button
-                  key={tab.id}
-                  variant="outline"
-                  onClick={() => setActiveTab(tab.id as any)}
-                  className={cn(
-                    "rounded-full px-5 flex gap-2",
-                    activeTab === tab.id &&
-                    "bg-primary text-primary-foreground hover:bg-primary"
-                  )}
-                >
-                  <Icon className="h-4 w-4" />
-                  {tab.label}
-                </Button>
-              )
-            })}
-          </div>
-
-          {/* Content Area (Full Width) */}
-          <Card className="w-full p-6 rounded-2xl border-0 shadow-sm min-h-55">
-            {activeTab === "my" && <MyReports />}
-            {activeTab === "lost" && <GlobalLost />}
-            {activeTab === "found" && <GlobalFound />}
-          </Card>
-        </div>
+        {/* Content */}
+        <Card className="p-6 rounded-2xl">
+          {activeTab === "my" && <MyReports />}
+          {activeTab === "lost" && <GlobalLost />}
+          {activeTab === "found" && <GlobalFound />}
+        </Card>
       </div>
     </main>
   )
 }
 
-type ItemType = "lost" | "found"
-
-interface Item {
-  id: string
-  name: string
-  category: string
-  description?: string
-  condition?: string
-  location: string
-  imageUrl?: string
-
-  userId: string       // user uid
-  sensitiveItem?: boolean
-
-  createdAt?: any          // Firestore Timestamp
-}
-
-interface ItemCardProps {
-  item: Item
-  type: ItemType
-}
-
+/* ===================== Item Card ===================== */
 
 function ItemCard({ item, type }: ItemCardProps) {
   const { user } = useAuth()
-
   const router = useRouter()
   const isMyReport = item.userId === user?.uid
 
@@ -214,13 +236,13 @@ function ItemCard({ item, type }: ItemCardProps) {
             <div>
               {isMyReport && type === "lost" ? (
                 <Link href={`/verification-result/${item.id}`}>
-                  <Button variant="outline" size="sm">
+                  <Button variant="outline" size="sm" className="cursor-pointer">
                     <Eye className="h-4 w-4 mr-1" />
                     Check Status
                   </Button>
                 </Link>
               ) : isMyReport && type === "found" ? (
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" className="cursor-pointer">
                   <Eye className="h-4 w-4 mr-1" />
                   View Ownership
                 </Button>
@@ -228,6 +250,7 @@ function ItemCard({ item, type }: ItemCardProps) {
                 <Button
                   size="sm"
                   onClick={() => router.push(`/verify-ownership/${item.id}`)}
+                  className="cursor-pointer"
                 >
                   <Hand className="h-4 w-4 mr-1" />
                   Claim Ownership
@@ -243,61 +266,39 @@ function ItemCard({ item, type }: ItemCardProps) {
   )
 }
 
+/* ===================== Data Sections ===================== */
+
 function MyReports() {
   const { user } = useAuth()
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<Item[]>([])
 
   useEffect(() => {
     if (!user) return
-    getMyReports(user.uid).then(setItems)
+    getMyReports(user.uid).then((res) => setItems(res as Item[]))
   }, [user])
 
-  if (!items.length)
-    return <p className="text-muted-foreground text-center">No reports yet.</p>
-
-  return (
-    <div className="space-y-4">
-      {items.map(item => (
-        <ItemCard key={item.id} item={item} type={item.type} />
-      ))}
-    </div>
-  )
+  if (!items.length) return <p>No reports yet.</p>
+  return <div className="space-y-4">{items.map(i => <ItemCard key={i.id} item={i} type={i.type} />)}</div>
 }
 
 function GlobalLost() {
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<Item[]>([])
 
   useEffect(() => {
-    getGlobalLost().then(setItems)
+    getGlobalLost().then((res) => setItems(res as Item[]))
   }, [])
 
-  if (!items.length)
-    return <p className="text-muted-foreground text-center">No lost items.</p>
-
-  return (
-    <div className="space-y-4">
-      {items.map(item => (
-        <ItemCard key={item.id} item={item} type="lost" />
-      ))}
-    </div>
-  )
+  if (!items.length) return <p>No lost items.</p>
+  return <div className="space-y-4">{items.map(i => <ItemCard key={i.id} item={i} type="lost" />)}</div>
 }
 
 function GlobalFound() {
-  const [items, setItems] = useState<any[]>([])
+  const [items, setItems] = useState<Item[]>([])
 
   useEffect(() => {
-    getGlobalFound().then(setItems)
+    getGlobalFound().then((res) => setItems(res as Item[]))
   }, [])
 
-  if (!items.length)
-    return <p className="text-muted-foreground text-center">No found items.</p>
-
-  return (
-    <div className="space-y-4">
-      {items.map(item => (
-        <ItemCard key={item.id} item={item} type="found" />
-      ))}
-    </div>
-  )
+  if (!items.length) return <p>No found items.</p>
+  return <div className="space-y-4">{items.map(i => <ItemCard key={i.id} item={i} type="found" />)}</div>
 }

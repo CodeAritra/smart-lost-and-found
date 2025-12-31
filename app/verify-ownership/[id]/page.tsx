@@ -169,7 +169,7 @@ export default function VerifyOwnershipPage() {
           </p>
 
           <Button
-            onClick={() => router.push("/chat")}
+            onClick={() => router.push(`/chat/${params.id}?owner=${userId}`)}
             className="px-8 font-semibold"
           >
             Go to chat box

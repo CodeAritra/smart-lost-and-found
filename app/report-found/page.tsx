@@ -35,6 +35,7 @@ export default function ReportFoundPage() {
 
   const [image, setImage] = useState<File | null>(null)
   const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
@@ -53,6 +54,7 @@ export default function ReportFoundPage() {
     }
 
     try {
+      setLoading(true)
       //  UPDATED VALIDATION
       if (!formData.category || !formData.name || !formData.location) {
         alert("Category, item name, and location are required")
@@ -97,10 +99,14 @@ export default function ReportFoundPage() {
       }
 
       await reportFoundItem(payload)
+      setLoading(false)
       router.push("/dashboard")
     } catch (err) {
       console.error(err)
       alert("Something went wrong. Try again.")
+    }
+    finally {
+      setLoading(false)
     }
   }
 
@@ -294,9 +300,10 @@ export default function ReportFoundPage() {
             <Button
               type="submit"
               className="w-full rounded-lg h-12 font-semibold mt-8"
+              disabled={loading}
             >
               <Package className="h-5 w-5 mr-2" />
-              Submit Found Item
+              {!loading ? "Submit Found Item" : "Submitting..."}
             </Button>
           </form>
         </Card>
