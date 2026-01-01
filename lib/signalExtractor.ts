@@ -1,4 +1,4 @@
-type Signals = {
+export type Signals = {
   color: string | null;
   brand: string | null;
   damage: string | null;
@@ -6,7 +6,6 @@ type Signals = {
   accessoryColor: string | null;
 };
 
-/* -------------------- Keyword Maps -------------------- */
 
 const DAMAGE_KEYWORDS: Record<string, string[]> = {
   scratched: ["scratch", "scratched", "scratches"],
@@ -17,6 +16,14 @@ const DAMAGE_KEYWORDS: Record<string, string[]> = {
 const ACCESSORY_KEYWORDS: Record<string, string[]> = {
   "back cover": ["cover", "case", "back cover"],
   "screen protector": ["tempered glass", "screen guard"],
+};
+
+const BRAND_KEYWORDS: Record<string, string[]> = {
+  apple: ["apple", "iphone"],
+  samsung: ["samsung", "galaxy"],
+  oneplus: ["oneplus"],
+  xiaomi: ["xiaomi", "redmi", "mi"],
+  realme: ["realme"],
 };
 
 const COLOR_KEYWORDS = [
@@ -30,14 +37,14 @@ const COLOR_KEYWORDS = [
   "gold",
 ];
 
-/* -------------------- Helpers -------------------- */
+
 
 function findFromKeywords(
   text: string,
   map: Record<string, string[]>
 ): string | null {
   for (const [value, keywords] of Object.entries(map)) {
-    if (keywords.some((k) => text.includes(k))) {
+    if (keywords.some(k => text.includes(k))) {
       return value;
     }
   }
@@ -45,20 +52,31 @@ function findFromKeywords(
 }
 
 function findColor(text: string): string | null {
-  return COLOR_KEYWORDS.find((color) => text.includes(color)) || null;
+  return COLOR_KEYWORDS.find(c => text.includes(c)) || null;
 }
 
-/* -------------------- Extractor -------------------- */
 
 export function extractSignals(found: any): Signals {
   const description =
     found?.description?.toLowerCase() || "";
 
   return {
-    color: found?.color || findColor(description),
-    brand: found?.brand || null,
+    // ⚠️ Matching only — NEVER trust for claim verification
+    color:
+      found?.color ||
+      findColor(description) ||
+      null,
 
-    damage: findFromKeywords(description, DAMAGE_KEYWORDS),
+    brand:
+      found?.brand ||
+      findFromKeywords(description, BRAND_KEYWORDS) ||
+      null,
+
+    // 🔐 Verification signals — NOT shown publicly
+    damage: findFromKeywords(
+      description,
+      DAMAGE_KEYWORDS
+    ),
 
     accessory: findFromKeywords(
       description,

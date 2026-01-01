@@ -1,4 +1,4 @@
-import { geminiModel } from "./firebase";
+import { gemini25Flash, gemini20Flash } from "./firebase";
 
 /* -------------------- Types -------------------- */
 
@@ -22,6 +22,53 @@ export type Question = {
 // const ai = new GoogleGenAI({
 //   apiKey: process.env.GEMINI_API_KEY!,
 // });
+
+// Generate with fallback
+
+function isRateLimitError(err: any): boolean {
+    return (
+        err?.status === 429 ||
+        err?.code === 429 ||
+        err?.code === "RESOURCE_EXHAUSTED" ||
+        err?.message?.includes("429") ||
+        err?.message?.includes("quota") ||
+        err?.message?.includes("RESOURCE_EXHAUSTED")
+    );
+}
+
+
+async function generateWithFallback(prompt: string): Promise<string> {
+    const models = [
+        { name: "gemini-2.5-flash", model: gemini25Flash },
+        { name: "gemini-2.0-flash", model: gemini20Flash }
+    ];
+
+    for (const { name, model } of models) {
+        try {
+            const result = await model.generateContent(prompt);
+            const text = result.response.text();
+
+            if (!text) {
+                throw new Error("Empty response");
+            }
+
+            return text;
+        } catch (err: any) {
+            console.error(`❌ ${name} failed:`, err?.message);
+
+            if (isRateLimitError(err)) {
+                console.warn(`⚠️ Rate limit on ${name}, switching model...`);
+                continue;
+            }
+
+            // Non-quota errors should stop execution
+            throw err;
+        }
+    }
+
+    throw new Error("All Gemini models are rate-limited");
+}
+
 
 /* -------------------- Generator -------------------- */
 
@@ -49,8 +96,8 @@ Return STRICT JSON ONLY in this format:
 ]
 `;
 
-    const result = await geminiModel.generateContent(prompt);
-    const rawText = result.response.text();
+    const rawText = await generateWithFallback(prompt);
+    // const rawText = result.response.text();
 
     if (!rawText) {
         throw new Error("Gemini returned empty response");

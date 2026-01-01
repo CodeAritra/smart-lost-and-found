@@ -13,6 +13,29 @@ import { db } from "@/lib/firebase";
 import { extractSignals } from "@/lib/signalExtractor"
 import { generateQuestions } from "@/lib/ai"
 
+const MOCK_SIGNALS = {
+  brand: "Apple",
+  color: "Black",
+  damage: "Scratched screen",
+};
+
+const MOCK_QUESTIONS = [
+  {
+    id: "brand",
+    question: "What is the brand of the item?",
+  },
+  {
+    id: "color",
+    question: "What color is the item?",
+  },
+  {
+    id: "damage",
+    question: "Does the item have any damage?",
+  },
+];
+
+const isMock = true
+
 export default function VerifyOwnershipPage() {
   const router = useRouter()
   const params = useParams()
@@ -28,9 +51,11 @@ export default function VerifyOwnershipPage() {
   const [isComplete, setIsComplete] = useState(false)
   const [decision, setDecision] = useState<string | null>(null)
   const [signals, setSignals] = useState<any>(null);
+  const [ownerId, setOwnerId] = useState("")
 
   // user id
   const userId = user?.uid
+  // let ownerId: string
 
   const fetchFoundItemAndSignals = async () => {
     const ref = doc(db, "foundItems", params.id as string);
@@ -41,15 +66,29 @@ export default function VerifyOwnershipPage() {
     }
 
     const foundItem = snap.data();
+    // console.log("\nfound items = ", foundItem)
+    setOwnerId(foundItem?.userId)
+    // console.log("\nOwner id = ", ownerId)
     return extractSignals(foundItem);
   };
 
+  const isMock = false;
 
   /* ---------------- FETCH AI QUESTIONS ---------------- */
   useEffect(() => {
     const fetchQuestions = async () => {
       try {
         setLoading(true);
+
+        if (isMock) {
+          await new Promise((res) => setTimeout(res, 800)); // simulate delay
+
+          setSignals(MOCK_SIGNALS as any);
+          setQuestions(MOCK_QUESTIONS as any);
+          setOwnerId("HC4nxxqYLpYqazYEKXsFy5tWoCF2")
+
+          return;
+        }
 
         //  Fetch & extract signals once
         const extractedSignals = await fetchFoundItemAndSignals();
@@ -127,11 +166,16 @@ export default function VerifyOwnershipPage() {
       }
 
       setDecision(finalDecision);
-      setIsComplete(true);
+      // setIsComplete(true);
+      { ownerId && router.push(`/verification-result/${params.id}?owner=${ownerId}`) }
     } catch (err) {
       console.error("Verification failed", err);
     }
   };
+
+  useEffect(() => {
+    console.log("owner id = ", ownerId)
+  }, [ownerId])
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
@@ -140,7 +184,8 @@ export default function VerifyOwnershipPage() {
   }
 
   /* ---------------- STATES ---------------- */
-  if (loading) {
+
+  if (loading || questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">
@@ -169,7 +214,11 @@ export default function VerifyOwnershipPage() {
           </p>
 
           <Button
-            onClick={() => router.push(`/chat/${params.id}?owner=${userId}`)}
+            disabled={!ownerId}
+            onClick={() => {
+              if (!ownerId) return;
+              router.push(`/chat/${params.id}?owner=${ownerId}`);
+            }}
             className="px-8 font-semibold"
           >
             Go to chat box
@@ -224,12 +273,12 @@ export default function VerifyOwnershipPage() {
 
         <Card className="p-8 rounded-2xl shadow-lg">
           <Label className="text-lg font-semibold block mb-4">
-            {question.question}
+            {question?.question}
           </Label>
 
           <Input
             placeholder="Type your answer"
-            value={answers[question.id] || ""}
+            value={answers[question?.id] || ""}
             onChange={(e) => handleAnswer(e.target.value)}
             className="h-12 text-base"
           />
@@ -246,7 +295,7 @@ export default function VerifyOwnershipPage() {
 
             <Button
               onClick={handleNext}
-              disabled={!answers[question.id]}
+              disabled={!answers[question?.id]}
               className="flex-1 h-12 font-semibold"
             >
               {currentQuestion === questions.length - 1

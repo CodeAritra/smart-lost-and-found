@@ -58,13 +58,13 @@ export default function LoginPage() {
           Sign in with Google
         </Button>
 
-        <Button
+        {/* <Button
           variant="outline"
           className="w-full rounded-lg h-12 font-semibold flex items-center justify-center gap-2 bg-transparent"
         >
           <Mail className="h-5 w-5" />
           Sign in with College Email
-        </Button>
+        </Button> */}
 
         <p className="text-xs text-muted-foreground text-center mt-6">
           By signing in, you agree to our Terms of Service and confirm you are a verified campus member.

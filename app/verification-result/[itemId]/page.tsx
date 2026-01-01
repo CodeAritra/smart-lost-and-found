@@ -5,7 +5,7 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { CheckCircle2, XCircle, Search } from "lucide-react"
 import Link from "next/link"
-import { useParams } from "next/navigation"
+import { useParams, useSearchParams } from "next/navigation"
 import {
   collection,
   query,
@@ -15,21 +15,45 @@ import {
 } from "firebase/firestore"
 import { db } from "@/lib/firebase"
 
+
 export default function MatchStatusPage() {
   const params = useParams()
 
-  const itemId =
-    typeof params.itemId === "string"
-      ? params.itemId
-      : params.itemId?.[0]
+  // const itemId =
+  //   typeof params.itemId === "string"
+  //     ? params.itemId
+  //     : params.itemId?.[0]
+  const itemId = params.itemId
+  const searchParams = useSearchParams();
+  const ownerId = searchParams.get("owner");
 
   const [loading, setLoading] = useState(true)
   const [match, setMatch] = useState<any | null>(null)
+
+  const MOCK_MATCH = {
+    id: "mock_match_001",
+    lostItemId: itemId,
+    foundItemId: "found_123",
+    score: 0.20,
+    decision: "reject",
+    createdAt: new Date(),
+  };
+
+  const isMock = false
 
   useEffect(() => {
     if (!itemId) return
     const fetchMatch = async () => {
       try {
+        setLoading(true)
+
+        if (isMock) {
+          await new Promise((res) => setTimeout(res, 600)); // simulate delay
+
+          setMatch(MOCK_MATCH as any);
+          return;
+        }
+
         const q = query(
           collection(db, "matches"),
           where("lostItemId", "==", itemId),
@@ -50,8 +74,6 @@ export default function MatchStatusPage() {
 
     fetchMatch()
   }, [itemId])
-
-  
 
   if (loading) {
     return (
@@ -91,14 +113,14 @@ export default function MatchStatusPage() {
               <div className="bg-muted rounded-lg p-4 mb-6 text-left">
                 <p className="font-semibold mb-2">Why this matched:</p>
                 <ul className="list-disc list-inside text-sm text-muted-foreground">
-                  {match.reasons.map((r: string, i: number) => (
+                  {match?.reasons?.map((r: string, i: number) => (
                     <li key={i}>{r}</li>
                   ))}
                 </ul>
               </div>
 
               <div className="space-y-7">
-                <Link href={`/chat`}>
+                <Link href={`/chat/${params.itemId}?owner=${ownerId}`}>
                   <Button className="w-full h-12 font-semibold mb-2">
                     Go to chat box
                   </Button>

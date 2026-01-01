@@ -11,11 +11,13 @@ export async function POST(req: Request) {
   try {
     const { channelId, members } = await req.json();
 
-    if (!channelId || !Array.isArray(members) || members.length < 2) {
-      return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
+    if (!channelId || !Array.isArray(members) || members.length !== 1) {
+      return NextResponse.json(
+        { error: "Client must send exactly one other member" },
+        { status: 400 }
+      );
     }
 
-    // 🔐 Verify Firebase token
     const authHeader = req.headers.get("authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -24,24 +26,33 @@ export async function POST(req: Request) {
     const token = authHeader.replace("Bearer ", "");
     const decoded = await adminAuth.verifyIdToken(token);
     const creatorId = decoded.uid;
+    const otherUserId = members[0];
 
-    if (!members.includes(creatorId)) {
+    if (otherUserId === creatorId) {
       return NextResponse.json(
-        { error: "Creator must be a channel member" },
-        { status: 403 }
+        { error: "Cannot create chat with yourself" },
+        { status: 400 }
       );
     }
 
+    await serverClient.upsertUser({
+      id: creatorId,
+      role: "user",
+    });
+
+    await serverClient.upsertUser({
+      id: otherUserId,
+      role: "user",
+    });
+
     const channel = serverClient.channel("messaging", channelId, {
-      members,
+      members: [creatorId, otherUserId],
       created_by_id: creatorId,
     });
 
     try {
-      // ✅ create channel
       await channel.create();
     } catch (err: any) {
-      // 🟡 Channel already exists → ignore
       if (err?.code !== 16) {
         throw err;
       }

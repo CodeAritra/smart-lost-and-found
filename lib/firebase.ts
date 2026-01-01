@@ -26,7 +26,13 @@ export const ai = getAI(app, {
   backend: new GoogleAIBackend(),
 });
 
-//  Gemini model (latest fast model)
-export const geminiModel = getGenerativeModel(ai, {
+
+// Primary (fastest, lowest quota)
+export const gemini25Flash = getGenerativeModel(ai, {
   model: "gemini-2.5-flash",
+});
+
+// Fallback 1 (very stable)
+export const gemini20Flash = getGenerativeModel(ai, {
+  model: "gemini-2.0-flash",
 });

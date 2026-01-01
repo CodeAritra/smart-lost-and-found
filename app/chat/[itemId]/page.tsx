@@ -24,41 +24,27 @@ export default function ChatPage() {
 
   const [channel, setChannel] = useState<any>(null);
   const [chatLoading, setChatLoading] = useState(true);
+  const [isStreamConnected, setIsStreamConnected] = useState(false);
+
 
   useEffect(() => {
-    if (loading) return;
-    if (!user) {
-      router.replace("/login");
-      return;
-    }
-    if (!ownerId) return;
+    if (loading || !user || !ownerId || !itemId) return;
 
     const initChat = async () => {
       try {
+        setChatLoading(true);
+
         const idToken = await user.getIdToken();
 
-        /*await fetch("/api/stream-delete-channel", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${idToken}`,
-          },
-          body: JSON.stringify({
-            channelId: `item_${itemId}`,
-          }),
-        });*/
-
-
         // 1️⃣ Get Stream token
-
         const tokenRes = await fetch("/api/stream-token", {
           headers: { Authorization: `Bearer ${idToken}` },
         });
 
         const { token } = await tokenRes.json();
 
-        // 2️⃣ Connect Stream user
-        if (!streamClient.user) {
+        // 2️⃣ ALWAYS connect user (once)
+        if (!isStreamConnected) {
           await streamClient.connectUser(
             {
               id: user.uid,
@@ -66,45 +52,30 @@ export default function ChatPage() {
             },
             token
           );
+
+          setIsStreamConnected(true);
         }
 
-        // 3️⃣ Upsert both users
-        await fetch("/api/stream-upsert-user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: user.uid,
-            name: `user_${user.uid.slice(0, 5)}`,
-          }),
-        });
-
-        await fetch("/api/stream-upsert-user", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: ownerId,
-            name: `user_${ownerId.slice(0, 5)}`,
-          }),
-        });
-
-        // 4️⃣ 🔐 Create channel on SERVER
+        // 3️⃣ Create channel (server-side permissions)
         const channelId = `item_${itemId}`;
 
         await fetch("/api/stream-create-channel", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${idToken}`, // 🔐 REQUIRED
+            Authorization: `Bearer ${idToken}`,
           },
           body: JSON.stringify({
             channelId,
-            members: [user.uid, ownerId],
+            members: [ownerId],
           }),
         });
 
+        // 4️⃣ Watch channel
+        const ch = streamClient.channel("messaging", channelId, {
+          members: [user.uid, ownerId],
+        });
 
-        // 5️⃣ Watch channel from client
-        const ch = streamClient.channel("messaging", channelId);
         await ch.watch();
 
         setChannel(ch);
@@ -116,7 +87,9 @@ export default function ChatPage() {
     };
 
     initChat();
-  }, [user, loading, itemId, ownerId, router]);
+  }, [user, ownerId, itemId, loading, isStreamConnected]);
+
+
 
   if (loading || chatLoading) {
     return <p className="text-center mt-20">Connecting to chat…</p>;
