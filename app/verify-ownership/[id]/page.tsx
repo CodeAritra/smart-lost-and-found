@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, Lock, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, Lock, CheckCircle2, XCircle } from "lucide-react"
 import { useRouter, useParams } from "next/navigation"
 import { useAuth } from "@/context/authContext"
 import { doc, getDoc } from "firebase/firestore";
@@ -52,6 +52,8 @@ export default function VerifyOwnershipPage() {
   const [decision, setDecision] = useState<string | null>(null)
   const [signals, setSignals] = useState<any>(null);
   const [ownerId, setOwnerId] = useState("")
+  const [error, setError] = useState<string | null>(null)
+
 
   // user id
   const userId = user?.uid
@@ -98,8 +100,16 @@ export default function VerifyOwnershipPage() {
         //  Generate AI questions
         const aiQuestions = await generateQuestions(extractedSignals);
         setQuestions(aiQuestions);
-      } catch (err) {
+      } catch (err: any) {
         console.error("Failed to load questions", err);
+        if (
+          err?.message?.toLowerCase().includes("limit") ||
+          err?.message?.toLowerCase().includes("quota")
+        ) {
+          setError("AI usage limit exceeded. Please try again later.")
+        } else {
+          setError("Something went wrong while generating questions.")
+        }
       } finally {
         setLoading(false);
       }
@@ -166,8 +176,8 @@ export default function VerifyOwnershipPage() {
       }
 
       setDecision(finalDecision);
-      // setIsComplete(true);
-      { ownerId && router.push(`/verification-result/${params.id}?owner=${ownerId}`) }
+      setIsComplete(true);
+      // { ownerId && router.push(`/verification-result/${params.id}?owner=${ownerId}`) }
     } catch (err) {
       console.error("Verification failed", err);
     }
@@ -185,6 +195,26 @@ export default function VerifyOwnershipPage() {
 
   /* ---------------- STATES ---------------- */
 
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6">
+        <Card className="p-8 max-w-md text-center">
+          <h2 className="text-xl font-bold mb-3 text-red-500">
+            Limit Exceeded
+          </h2>
+          <p className="text-muted-foreground mb-6">
+            {error}
+          </p>
+
+          <Button onClick={() => router.back()}>
+            Go Back
+          </Button>
+        </Card>
+      </div>
+    )
+  }
+
+
   if (loading || questions.length === 0) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -199,12 +229,13 @@ export default function VerifyOwnershipPage() {
     return (
       <main className="min-h-screen bg-linear-to-br from-background to-muted">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
-          <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-6" />
+          {decision === "approved" && <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-6" />}
+          {(decision === "under_review" || decision === "rejected") && <XCircle className="h-16 w-16 text-red-500 mx-auto mb-6" />}
           <h1 className="text-3xl font-bold mb-4">
             Verification Submitted
           </h1>
 
-          <p className="text-muted-foreground mb-8">
+          <p className="text-muted-foreground mb-8 text-xl">
             {decision === "approved" &&
               "Ownership verified successfully. The item is now claimed."}
             {decision === "under_review" &&
@@ -213,16 +244,28 @@ export default function VerifyOwnershipPage() {
               "Verification failed. The answers did not match our records."}
           </p>
 
-          <Button
+          {decision == "approved" && <Button
             disabled={!ownerId}
             onClick={() => {
               if (!ownerId) return;
               router.push(`/chat/${params.id}?owner=${ownerId}`);
             }}
-            className="px-8 font-semibold"
+            className="px-8 font-semibold cursor-pointer"
           >
             Go to chat box
-          </Button>
+          </Button>}
+          {
+            (decision === "under_review" || decision === "rejected") && <Button
+              disabled={!ownerId}
+              onClick={() => {
+                if (!ownerId) return;
+                router.push(`/dashboard`);
+              }}
+              className="px-8 font-semibold cursor-pointer"
+            >
+              Go to dashboard
+            </Button>
+          }
         </div>
       </main>
     )

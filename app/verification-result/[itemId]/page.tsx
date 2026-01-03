@@ -75,6 +75,11 @@ export default function MatchStatusPage() {
     fetchMatch()
   }, [itemId])
 
+  const hasMatch = Boolean(match)
+  useEffect(() => {
+    console.log("match = ", hasMatch, "\nmatch item = ", match)
+  }, [hasMatch, match])
+
   if (loading) {
     return (
       <main className="min-h-screen flex items-center justify-center">
@@ -82,8 +87,7 @@ export default function MatchStatusPage() {
       </main>
     )
   }
-
-  const hasMatch = Boolean(match)
+ 
 
   return (
     <main className="min-h-screen bg-linear-to-br from-background via-background to-muted">

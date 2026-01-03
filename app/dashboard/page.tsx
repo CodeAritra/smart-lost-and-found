@@ -180,7 +180,7 @@ function ItemCard({ item, type }: ItemCardProps) {
           <img
             src={item.imageUrl}
             alt="item"
-            className="h-24 w-24 rounded-xl object-cover border"
+            className="h-24 w-24 rounded-xl object-cover border grayscale"
           />
         ) : (
           <div className="h-24 w-24 rounded-xl bg-muted flex items-center justify-center text-sm text-muted-foreground">
@@ -241,21 +241,17 @@ function ItemCard({ item, type }: ItemCardProps) {
                     Check Status
                   </Button>
                 </Link>
-              ) : isMyReport && type === "found" ? (
-                <Button variant="outline" size="sm" className="cursor-pointer">
-                  <Eye className="h-4 w-4 mr-1" />
-                  View Ownership
-                </Button>
-              ) : !isMyReport && type === "found" ? (
-                <Button
-                  size="sm"
-                  onClick={() => router.push(`/verify-ownership/${item.id}`)}
-                  className="cursor-pointer"
-                >
-                  <Hand className="h-4 w-4 mr-1" />
-                  Claim Ownership
-                </Button>
-              ) : null}
+              )
+                : !isMyReport && type === "found" ? (
+                  <Button
+                    size="sm"
+                    onClick={() => router.push(`/verify-ownership/${item.id}`)}
+                    className="cursor-pointer"
+                  >
+                    <Hand className="h-4 w-4 mr-1" />
+                    Claim Ownership
+                  </Button>
+                ) : null}
             </div>
 
 
