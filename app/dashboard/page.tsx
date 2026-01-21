@@ -220,6 +220,23 @@ function ItemCard({ item, type }: ItemCardProps) {
             <p className="text-xs mt-1 text-muted-foreground">
               📍 {item.location}
             </p>
+            <p className="text-xs mt-1 text-muted-foreground">
+              🕒{" "}
+              {item.createdAt
+                .toDate()
+                .toLocaleDateString("en-IN", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}{" "}
+              at{" "}
+              {item.createdAt
+                .toDate()
+                .toLocaleTimeString("en-IN", {
+                  hour: "numeric",
+                  minute: "2-digit",
+                })}
+            </p>
           </div>
 
           {/* Action */}
@@ -294,6 +311,8 @@ function GlobalFound() {
   useEffect(() => {
     getGlobalFound().then((res) => setItems(res as Item[]))
   }, [])
+
+
 
   if (!items.length) return <p>No found items.</p>
   return <div className="space-y-4">{items.map(i => <ItemCard key={i.id} item={i} type="found" />)}</div>
