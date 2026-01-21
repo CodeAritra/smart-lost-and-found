@@ -34,7 +34,7 @@ const MOCK_QUESTIONS = [
   },
 ];
 
-const isMock = true
+const isMock = false
 
 export default function VerifyOwnershipPage() {
   const router = useRouter()
@@ -73,8 +73,6 @@ export default function VerifyOwnershipPage() {
     // console.log("\nOwner id = ", ownerId)
     return extractSignals(foundItem);
   };
-
-  const isMock = false;
 
   /* ---------------- FETCH AI QUESTIONS ---------------- */
   useEffect(() => {
@@ -241,7 +239,7 @@ export default function VerifyOwnershipPage() {
             {decision === "under_review" &&
               "Your claim is under manual review due to item sensitivity."}
             {decision === "rejected" &&
-              "Verification failed. The answers did not match our records."}
+              "Verification failed."}
           </p>
 
           {decision == "approved" && <Button

@@ -24,11 +24,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser)
       setLoading(false)
+      // console.log("user === ", firebaseUser)
 
       if (firebaseUser && !streamClient.user) {
         try {
           // Get Firebase ID token
-          const idToken = await firebaseUser.getIdToken()
+          const idToken = await firebaseUser.getIdToken();
 
           // Fetch Stream token from API
           const res = await fetch("/api/stream-token", {
@@ -42,7 +43,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           await streamClient.connectUser(
             {
               id: firebaseUser.uid,
-              name: `user_${firebaseUser.uid.slice(0, 5)}`,
+              name: firebaseUser.displayName || `user_${firebaseUser.uid.slice(0, 5)}`,
+              // name: `user_${firebaseUser.uid.slice(0, 5)}`,
             },
             data.token
           )

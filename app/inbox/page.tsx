@@ -26,24 +26,40 @@ export default function InboxPage() {
 
   return (
     <Chat client={streamClient} theme="messaging light">
-      <div className="flex h-screen">
-        {/* LEFT: Inbox */}
-        <div className="w-80 border-r">
-          <ChannelList
-            filters={{ members: { $in: [user.uid] } }}
-            sort={{ last_message_at: -1 }}
-          />
+      <div className="flex flex-col h-screen">
+
+        {/* TOP BAR */}
+        <div className="p-2 border-b bg-white">
+          <button
+            onClick={() => router.replace("/dashboard")}
+            className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+          >
+            ← Back to Dashboard
+          </button>
         </div>
 
-        {/* RIGHT: Chat Window */}
-        <div className="flex-1">
-          <Channel>
-            <Window>
-              <ChannelHeader />
-              <MessageList />
-              <MessageInput />
-            </Window>
-          </Channel>
+        {/* MAIN CONTENT */}
+        <div className="flex flex-1">
+
+          {/* LEFT: Inbox */}
+          <div className="w-80 border-r">
+            <ChannelList
+              filters={{ members: { $in: [user.uid] } }}
+              sort={{ last_message_at: -1 }}
+            />
+          </div>
+
+          {/* RIGHT: Chat Window */}
+          <div className="flex-1">
+            <Channel>
+              <Window>
+                <ChannelHeader />
+                <MessageList />
+                <MessageInput />
+              </Window>
+            </Channel>
+          </div>
+
         </div>
       </div>
     </Chat>

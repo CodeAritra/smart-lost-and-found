@@ -26,6 +26,7 @@ export default function ChatPage() {
   const [chatLoading, setChatLoading] = useState(true);
   const [isStreamConnected, setIsStreamConnected] = useState(false);
 
+  // console.log("user === ", user)
 
   useEffect(() => {
     if (loading || !user || !ownerId || !itemId) return;
@@ -48,7 +49,7 @@ export default function ChatPage() {
           await streamClient.connectUser(
             {
               id: user.uid,
-              name: `user_${user.uid.slice(0, 5)}`,
+              name: user.displayName || `user_${user.uid.slice(0, 5)}`,
             },
             token
           );
@@ -89,8 +90,6 @@ export default function ChatPage() {
     initChat();
   }, [user, ownerId, itemId, loading, isStreamConnected]);
 
-
-
   if (loading || chatLoading) {
     return <p className="text-center mt-20">Connecting to chat…</p>;
   }
@@ -101,6 +100,14 @@ export default function ChatPage() {
 
   return (
     <Chat client={streamClient} theme="messaging light">
+      <div className="p-2 border-b bg-white">
+        <button
+          onClick={() => router.replace("/dashboard")}
+          className="px-3 py-1 text-sm bg-gray-200 rounded hover:bg-gray-300"
+        >
+          ← Back to Dashboard
+        </button>
+      </div>
       <Channel channel={channel}>
         <Window>
           <ChannelHeader />
