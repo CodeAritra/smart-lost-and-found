@@ -76,23 +76,23 @@ export default function ReportFoundPage() {
 
       //  UPDATED PAYLOAD
       const payload: any = {
-        userId: user.uid,
-
-        category: formData.category,
         name: formData.name,
-
+        category: formData.category,
         brand: formData.brand || null,
         color: formData.color || null,
-
-        location: formData.location,
         condition: formData.condition || null,
         description: formData.description || null,
+        location: formData.location,
 
+        imageUrl: imageUrl || null,
         sensitiveItem: formData.sensitiveItem,
 
         status: "unclaimed",
+        foundBy: user.uid,
+
         createdAt: new Date(),
       }
+
 
       if (imageUrl) {
         payload.imageUrl = imageUrl

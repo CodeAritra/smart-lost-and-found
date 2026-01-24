@@ -40,6 +40,7 @@ export interface Item {
   sensitiveItem?: boolean
   createdAt?: any
   type: ItemType
+  status:string
 }
 
 interface ItemCardProps {
@@ -251,24 +252,28 @@ function ItemCard({ item, type }: ItemCardProps) {
               </div>
             )}</div>
             <div>
-              {isMyReport && type === "lost" ? (
+              {item.status === "claimed" ? (
+                <Button size="sm" disabled className="cursor-not-allowed">
+                  Claimed
+                </Button>
+              ) : isMyReport && type === "lost" ? (
                 <Link href={`/verification-result/${item.id}`}>
                   <Button variant="outline" size="sm" className="cursor-pointer">
                     <Eye className="h-4 w-4 mr-1" />
                     Check Status
                   </Button>
                 </Link>
-              )
-                : !isMyReport && type === "found" ? (
-                  <Button
-                    size="sm"
-                    onClick={() => router.push(`/verify-ownership/${item.id}`)}
-                    className="cursor-pointer"
-                  >
-                    <Hand className="h-4 w-4 mr-1" />
-                    Claim Ownership
-                  </Button>
-                ) : null}
+              ) : !isMyReport && type === "found" ? (
+                <Button
+                  size="sm"
+                  onClick={() => router.push(`/verify-ownership/${item.id}`)}
+                  className="cursor-pointer"
+                >
+                  <Hand className="h-4 w-4 mr-1" />
+                  Claim Ownership
+                </Button>
+              ) : null}
+
             </div>
 
 

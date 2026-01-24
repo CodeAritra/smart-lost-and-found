@@ -12,6 +12,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { extractSignals } from "@/lib/signalExtractor"
 import { generateQuestions } from "@/lib/ai"
+import { approveClaim } from "@/lib/report"
 
 const MOCK_SIGNALS = {
   brand: "Apple",
@@ -51,16 +52,18 @@ export default function VerifyOwnershipPage() {
   const [isComplete, setIsComplete] = useState(false)
   const [decision, setDecision] = useState<string | null>(null)
   const [signals, setSignals] = useState<any>(null);
-  const [ownerId, setOwnerId] = useState("")
+  // const [ownerId, setOwnerId] = useState("")
   const [error, setError] = useState<string | null>(null)
 
 
   // user id
   const userId = user?.uid
+  console.log("user id = ", userId)
+  const itemId = params.id
   // let ownerId: string
 
   const fetchFoundItemAndSignals = async () => {
-    const ref = doc(db, "foundItems", params.id as string);
+    const ref = doc(db, "foundItems", itemId as string);
     const snap = await getDoc(ref);
 
     if (!snap.exists()) {
@@ -69,7 +72,7 @@ export default function VerifyOwnershipPage() {
 
     const foundItem = snap.data();
     // console.log("\nfound items = ", foundItem)
-    setOwnerId(foundItem?.userId)
+    // setOwnerId(foundItem?.userId)
     // console.log("\nOwner id = ", ownerId)
     return extractSignals(foundItem);
   };
@@ -81,11 +84,11 @@ export default function VerifyOwnershipPage() {
         setLoading(true);
 
         if (isMock) {
-          await new Promise((res) => setTimeout(res, 800)); // simulate delay
+          await new Promise((res) => setTimeout(res, 2000)); // simulate delay
 
           setSignals(MOCK_SIGNALS as any);
           setQuestions(MOCK_QUESTIONS as any);
-          setOwnerId("HC4nxxqYLpYqazYEKXsFy5tWoCF2")
+          // setOwnerId("HC4nxxqYLpYqazYEKXsFy5tWoCF2")
 
           return;
         }
@@ -114,7 +117,7 @@ export default function VerifyOwnershipPage() {
     };
 
     fetchQuestions();
-  }, [params.id]);
+  }, [itemId]);
 
 
   // useEffect(() => { console.log("\nquestions = ", questions, "\ndecision = ", decision, "\n signals = ", signals) }, [questions, decision, signals])
@@ -166,15 +169,21 @@ export default function VerifyOwnershipPage() {
       let finalDecision: string;
 
       if (matched === total && total >= 2) {
-        finalDecision = "approved";
+        finalDecision = "claimed";
       } else if (matched >= 1) {
         finalDecision = "under_review";
       } else {
-        finalDecision = "rejected";
+        finalDecision = "unclaimed";
       }
 
       setDecision(finalDecision);
       setIsComplete(true);
+      if (itemId && userId) {
+        await approveClaim(Array.isArray(itemId) ? itemId[0] : itemId, userId, finalDecision, matched);
+      } else {
+        console.error("Item ID or User ID is undefined");
+      }
+      // await approveClaim(itemId,userId,finalDecision,matched)
       // { ownerId && router.push(`/verification-result/${params.id}?owner=${ownerId}`) }
     } catch (err) {
       console.error("Verification failed", err);
@@ -182,8 +191,8 @@ export default function VerifyOwnershipPage() {
   };
 
   useEffect(() => {
-    console.log("owner id = ", ownerId)
-  }, [ownerId])
+    console.log("owner id = ", userId)
+  }, [userId])
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
@@ -217,8 +226,14 @@ export default function VerifyOwnershipPage() {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <p className="text-muted-foreground">
-          Generating verification questions...
+          Generating verification questions
+          <span className="inline-flex ml-1">
+            <span className="dot">.</span>
+            <span className="dot">.</span>
+            <span className="dot">.</span>
+          </span>
         </p>
+
       </div>
     )
   }
@@ -227,36 +242,36 @@ export default function VerifyOwnershipPage() {
     return (
       <main className="min-h-screen bg-linear-to-br from-background to-muted">
         <div className="max-w-3xl mx-auto px-6 py-20 text-center">
-          {decision === "approved" && <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-6" />}
-          {(decision === "under_review" || decision === "rejected") && <XCircle className="h-16 w-16 text-red-500 mx-auto mb-6" />}
+          {decision === "claimed" && <CheckCircle2 className="h-16 w-16 text-green-500 mx-auto mb-6" />}
+          {(decision === "under_review" || decision === "unclaimed") && <XCircle className="h-16 w-16 text-red-500 mx-auto mb-6" />}
           <h1 className="text-3xl font-bold mb-4">
             Verification Submitted
           </h1>
 
           <p className="text-muted-foreground mb-8 text-xl">
-            {decision === "approved" &&
+            {decision === "claimed" &&
               "Ownership verified successfully. The item is now claimed."}
             {decision === "under_review" &&
               "Your claim is under manual review due to item sensitivity."}
-            {decision === "rejected" &&
+            {decision === "unclaimed" &&
               "Verification failed."}
           </p>
 
-          {decision == "approved" && <Button
-            disabled={!ownerId}
+          {decision == "claimed" && <Button
+            disabled={!userId}
             onClick={() => {
-              if (!ownerId) return;
-              router.push(`/chat/${params.id}?owner=${ownerId}`);
+              if (!userId) return;
+              router.push(`/chat/${params.id}?owner=${userId}`);
             }}
             className="px-8 font-semibold cursor-pointer"
           >
             Go to chat box
           </Button>}
           {
-            (decision === "under_review" || decision === "rejected") && <Button
-              disabled={!ownerId}
+            (decision === "under_review" || decision === "unclaimed") && <Button
+              disabled={!userId}
               onClick={() => {
-                if (!ownerId) return;
+                if (!userId) return;
                 router.push(`/dashboard`);
               }}
               className="px-8 font-semibold cursor-pointer"
@@ -321,8 +336,15 @@ export default function VerifyOwnershipPage() {
             placeholder="Type your answer"
             value={answers[question?.id] || ""}
             onChange={(e) => handleAnswer(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && answers[question?.id]) {
+                e.preventDefault();
+                handleNext();
+              }
+            }}
             className="h-12 text-base"
           />
+
 
           <div className="flex gap-3 mt-8">
             <Button
