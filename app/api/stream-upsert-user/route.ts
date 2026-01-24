@@ -12,8 +12,12 @@ export async function POST(req: Request) {
 
     if (!id || !name) return NextResponse.json({ error: "Missing user id or name" }, { status: 400 });
 
+    if (id.includes("app_app_")) {
+      throw new Error("DOUBLE PREFIX BUG DETECTED in upsert-user");
+    }
+
     // Upsert the user on Stream (server-side, has permission)
-    await serverClient.upsertUser({ id, name });
+    await serverClient.upsertUser({ id: `app_${id}`, name });
 
     return NextResponse.json({ success: true });
   } catch (err: any) {

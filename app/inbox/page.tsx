@@ -24,6 +24,9 @@ export default function InboxPage() {
     return null
   }
 
+  const streamUserId = `app_${user.uid}`
+  console.log("\n user id = ",user.uid,"\nstream = ",streamUserId)
+
   return (
     <Chat client={streamClient} theme="messaging light">
       <div className="flex flex-col h-screen">
@@ -44,7 +47,7 @@ export default function InboxPage() {
           {/* LEFT: Inbox */}
           <div className="w-80 border-r">
             <ChannelList
-              filters={{ members: { $in: [user.uid] } }}
+              filters={{ members: { $in: [streamUserId] } }}
               sort={{ last_message_at: -1 }}
             />
           </div>

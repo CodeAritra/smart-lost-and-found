@@ -17,48 +17,87 @@ const PUBLIC_ROUTES = ["/login"]
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
+  const [streamReady, setStreamReady] = useState(true)
+
   const router = useRouter()
   const pathname = usePathname()
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      setUser(firebaseUser)
-      setLoading(false)
-      // console.log("user === ", firebaseUser)
+      setLoading(true);
+      setStreamReady(false);
 
-      if (firebaseUser && !streamClient.user) {
-        try {
-          // Get Firebase ID token
-          const idToken = await firebaseUser.getIdToken();
+      try {
+        if (!firebaseUser) {
+          if (streamClient.user) {
+            await streamClient.disconnectUser();
+          }
+          setUser(null);
+          return;
+        }
 
-          // Fetch Stream token from API
-          const res = await fetch("/api/stream-token", {
-            headers: { Authorization: `Bearer ${idToken}` },
-          })
+        setUser(firebaseUser);
 
-          if (!res.ok) throw new Error(`Stream token fetch failed: ${res.statusText}`)
-          const data = await res.json()
+        const firebaseUid = firebaseUser.uid;
+        // const streamUserId = `app_${firebaseUid}`;
+        const idToken = await firebaseUser.getIdToken();
 
-          // Connect Stream user
+        // ✅ Ensure Stream user exists (USE app_ ID)
+        await fetch("/api/stream-upsert-user", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: firebaseUid,
+            name: firebaseUser.displayName,
+            image: firebaseUser.photoURL,
+          }),
+        });
+
+        // ✅ Fetch Stream token (token MUST be for app_ ID)
+        const tokenRes = await fetch("/api/stream-token", {
+          headers: { Authorization: `Bearer ${idToken}` },
+        });
+
+        if (!tokenRes.ok) {
+          throw new Error("Stream token fetch failed");
+        }
+
+        const { token, streamUserId } = await tokenRes.json();
+
+        // ✅ Prevent double-connect (compare against app_ ID)
+        if (streamClient.user?.id !== streamUserId) {
           await streamClient.connectUser(
             {
-              id: firebaseUser.uid,
-              name: firebaseUser.displayName || `user_${firebaseUser.uid.slice(0, 5)}`,
-              // name: `user_${firebaseUser.uid.slice(0, 5)}`,
+              id: streamUserId,
+              name:
+                firebaseUser.displayName ||
+                `user_${firebaseUid.slice(0, 5)}`,
+              image: firebaseUser.photoURL || "",
             },
-            data.token
-          )
-          console.log("Stream user connected:", streamClient.user)
-        } catch (err) {
-          console.error("Stream connect error:", err)
+            token
+          );
         }
-      } else if (!firebaseUser && streamClient.user) {
-        await streamClient.disconnectUser()
-      }
-    })
 
-    return () => unsubscribe()
-  }, [])
+        console.log("✅ Stream connected as:", streamClient.user?.id);
+        setStreamReady(true);
+      } catch (err) {
+        console.error("Auth/Stream error:", err);
+        setStreamReady(false);
+      } finally {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    const id = streamClient.user?.id;
+    if (id && id.includes("app_app_")) {
+      console.error("🚨 DOUBLE PREFIX BUG DETECTED on client:", id);
+    }
+  }, [streamClient.user]);
+
 
   useEffect(() => {
     if (loading) return

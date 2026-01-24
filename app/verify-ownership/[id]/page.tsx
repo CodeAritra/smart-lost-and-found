@@ -13,6 +13,7 @@ import { db } from "@/lib/firebase";
 import { extractSignals } from "@/lib/signalExtractor"
 import { generateQuestions } from "@/lib/ai"
 import { approveClaim } from "@/lib/report"
+import { getGlobalFound } from "@/lib/firebaseFetch"
 
 const MOCK_SIGNALS = {
   brand: "Apple",
@@ -44,7 +45,7 @@ export default function VerifyOwnershipPage() {
   const { user } = useAuth()
 
   // console.log("\nUser = ", user)
-
+  const [item, setItem] = useState<any>(null);
   const [questions, setQuestions] = useState<any[]>([])
   const [currentQuestion, setCurrentQuestion] = useState(0)
   const [answers, setAnswers] = useState<Record<string, string>>({})
@@ -58,7 +59,7 @@ export default function VerifyOwnershipPage() {
 
   // user id
   const userId = user?.uid
-  console.log("user id = ", userId)
+  // console.log("user id = ", userId)
   const itemId = params.id
   // let ownerId: string
 
@@ -89,10 +90,12 @@ export default function VerifyOwnershipPage() {
           setSignals(MOCK_SIGNALS as any);
           setQuestions(MOCK_QUESTIONS as any);
           // setOwnerId("HC4nxxqYLpYqazYEKXsFy5tWoCF2")
-
+          const foundItem = await getGlobalFound();
+          setItem(foundItem);
           return;
         }
-
+        const foundItem = await getGlobalFound();
+        setItem(foundItem);
         //  Fetch & extract signals once
         const extractedSignals = await fetchFoundItemAndSignals();
         setSignals(extractedSignals);
@@ -119,6 +122,9 @@ export default function VerifyOwnershipPage() {
     fetchQuestions();
   }, [itemId]);
 
+  const normalizedItem = Array.isArray(item) ? item[0] : item;
+  const founderId = normalizedItem?.foundBy;
+  console.log("\nfounderId = ",founderId)
 
   // useEffect(() => { console.log("\nquestions = ", questions, "\ndecision = ", decision, "\n signals = ", signals) }, [questions, decision, signals])
 
@@ -191,8 +197,8 @@ export default function VerifyOwnershipPage() {
   };
 
   useEffect(() => {
-    console.log("owner id = ", userId)
-  }, [userId])
+    console.log("owner id = ", userId, "\n item = ", item)
+  }, [userId, item])
 
   const handlePrevious = () => {
     if (currentQuestion > 0) {
@@ -261,7 +267,7 @@ export default function VerifyOwnershipPage() {
             disabled={!userId}
             onClick={() => {
               if (!userId) return;
-              router.push(`/chat/${params.id}?owner=${userId}`);
+              router.push(`/chat/${params.id}?owner=app_${founderId}`);
             }}
             className="px-8 font-semibold cursor-pointer"
           >
