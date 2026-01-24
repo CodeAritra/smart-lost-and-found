@@ -1,7 +1,9 @@
 import {
   addDoc,
   collection,
+  doc,
   serverTimestamp,
+  updateDoc,
 } from "firebase/firestore"
 import { db } from "./firebase"
 import { matchLostItem, matchFoundItem } from "@/lib/aimatchmaking"
@@ -40,4 +42,29 @@ export const reportFoundItem = async (data: any) => {
   })
 
   return docRef.id
+}
+
+//UPDATE CLIAM ITEMS
+
+export const approveClaim = async (
+  itemId: string,
+  claimerUserId: string,
+  status :string,
+  confidence?: number
+) => {
+  const itemRef = doc(db, "foundItems", itemId)
+  // const claimRef = doc(db, "foundItems", itemId, "claims", claimId)
+
+  // update claim
+  // await updateDoc(claimRef, {
+  //   status: "approved",
+  //   approvedAt: serverTimestamp(),
+  // })
+
+  // update item
+  await updateDoc(itemRef, {
+    status: status,
+    claimedBy: claimerUserId,
+    claimConfidence: confidence ?? null,
+  })
 }
