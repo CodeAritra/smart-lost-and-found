@@ -8,7 +8,7 @@ export interface Item {
   condition?: string
   location: string
   imageUrl?: string
-  userId: string
+  foundBy: string
   sensitiveItem?: boolean
   createdAt?: any
   type: ItemType

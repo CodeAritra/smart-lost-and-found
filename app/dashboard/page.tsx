@@ -36,7 +36,7 @@ export interface Item {
   condition?: string
   location: string
   imageUrl?: string
-  userId: string
+  foundBy: string
   sensitiveItem?: boolean
   createdAt?: any
   type: ItemType
@@ -171,7 +171,7 @@ export default function DashboardPage() {
 function ItemCard({ item, type }: ItemCardProps) {
   const { user } = useAuth()
   const router = useRouter()
-  const isMyReport = item.userId === user?.uid
+  const isMyReport = item.foundBy === user?.uid
 
   return (
     <Card className="w-full p-4 rounded-2xl border border-border shadow-sm hover:shadow-md transition">

@@ -12,7 +12,7 @@ export async function getMyReports(userId: string): Promise<Item[]> {
 
   const foundQ = query(
     collection(db, "foundItems"),
-    where("userId", "==", userId),
+    where("foundBy", "==", userId),
     orderBy("createdAt", "desc")
   )
 
