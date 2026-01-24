@@ -35,31 +35,26 @@ export default function ChatPage() {
       try {
         setChatLoading(true);
 
-        const idToken = await user.getIdToken();
+        const currentUserId = streamClient.user?.id;
+        const ownerStreamId = ownerId;
 
-        // 1️⃣ Get Stream token
-        const tokenRes = await fetch("/api/stream-token", {
-          headers: { Authorization: `Bearer ${idToken}` },
-        });
-
-        const { token } = await tokenRes.json();
-
-        // 2️⃣ ALWAYS connect user (once)
-        if (!isStreamConnected) {
-          await streamClient.connectUser(
-            {
-              id: user.uid,
-              name: user.displayName || `user_${user.uid.slice(0, 5)}`,
-            },
-            token
-          );
-
-          setIsStreamConnected(true);
+        if (currentUserId === ownerStreamId) {
+          console.warn("Self-chat prevented");
+          return;
         }
 
-        // 3️⃣ Create channel (server-side permissions)
+        console.log("\ncurrent = ", currentUserId, "\nowner = ", ownerStreamId)
+
+        // 🚫 Prevent self-chat (hard stop)
+        if (currentUserId === ownerStreamId) {
+          console.warn("🚫 Self-chat prevented");
+          return;
+        }
+
+        const idToken = await user.getIdToken();
         const channelId = `item_${itemId}`;
 
+        // Create or ensure channel (server-side)
         await fetch("/api/stream-create-channel", {
           method: "POST",
           headers: {
@@ -68,18 +63,25 @@ export default function ChatPage() {
           },
           body: JSON.stringify({
             channelId,
-            members: [ownerId],
+            members: [ownerStreamId],
           }),
         });
 
-        // 4️⃣ Watch channel
-        const ch = streamClient.channel("messaging", channelId, {
-          members: [user.uid, ownerId],
-        });
-
+        // Client-side channel (no members here)
+        const ch = streamClient.channel("messaging", channelId);
         await ch.watch();
 
         setChannel(ch);
+
+        const members = Object.values(ch.state.members);
+
+        console.log("👥 Channel member count:", members.length);
+
+        members.forEach((m) => {
+          console.log("🧑 Member ID:", m.user?.id);
+          console.log("📛 Name:", m.user?.name);
+          console.log("🟢 Online:", m.user?.online);
+        });
       } catch (err) {
         console.error("Chat init error:", err);
       } finally {
@@ -88,7 +90,8 @@ export default function ChatPage() {
     };
 
     initChat();
-  }, [user, ownerId, itemId, loading, isStreamConnected]);
+  }, [user, ownerId, itemId, loading]);
+
 
   if (loading || chatLoading) {
     return <p className="text-center mt-20">Connecting to chat…</p>;
