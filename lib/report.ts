@@ -66,7 +66,7 @@ export const reportFoundItem = async (data: any) => {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        email: strongMatches[0].foundUserEmail,
+        email: strongMatches[0].lostUserEmail,
         itemid : strongMatches[0].foundItemId,
         score : strongMatches[0].score
       }),
