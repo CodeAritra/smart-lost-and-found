@@ -3,7 +3,9 @@ import {
   collection,
   getDocs,
   addDoc,
-  Timestamp
+  Timestamp,
+  getDoc,
+  doc
 } from "firebase/firestore"
 
 /* ---------- TEXT SIMILARITY ---------- */
@@ -71,29 +73,65 @@ const calculateMatchScore = (lost: any, found: any) => {
 /* ---------- LOST ➜ FOUND MATCH ---------- */
 export const matchLostItem = async (lostItem: any) => {
   const foundSnap = await getDocs(collection(db, "foundItems"))
+  const createdMatches = []
 
   for (const docSnap of foundSnap.docs) {
     const foundItem = docSnap.data()
-
     const { score, reasons } =
       calculateMatchScore(lostItem, foundItem)
 
+    // console.log("found item = ", foundItem, "\nlost item = ", lostItem)
+    // console.log("found item id = ", foundItem.foundBy, "\nlost item id = ", lostItem.userId)
+
+    const foundUserId = foundItem.foundBy
+    const lostUserId = lostItem.userId
+
+    const [lostUserSnap, foundUserSnap] = await Promise.all([
+      getDoc(doc(db, "users", lostUserId)),
+      getDoc(doc(db, "users", foundUserId)),
+    ])
+
+    if (!lostUserSnap.exists() || !foundUserSnap.exists()) {
+      continue
+    }
+
+    const lostUserEmail = lostUserSnap.data().email
+    const foundUserEmail = foundUserSnap.data().email
+
     if (score >= 60) {
-      await addDoc(collection(db, "matches"), {
+      const matchRef = await addDoc(collection(db, "matches"), {
         lostItemId: lostItem.id,
         foundItemId: docSnap.id,
+        lostUserId,
+        foundUserId,
         score,
         reasons,
         status: "pending",
+        notified: false,
         createdAt: Timestamp.now()
+      })
+
+
+      createdMatches.push({
+        id: matchRef.id,
+        foundItemId: docSnap.id,
+        lostUserId,
+        lostUserEmail,
+        foundUserId,
+        foundUserEmail,
+        score
       })
     }
   }
+
+  return createdMatches
 }
+
 
 /* ---------- FOUND ➜ LOST MATCH ---------- */
 export const matchFoundItem = async (foundItem: any) => {
   const lostSnap = await getDocs(collection(db, "lostItems"))
+  const createdMatches = []
 
   for (const docSnap of lostSnap.docs) {
     const lostItem = docSnap.data()
@@ -101,15 +139,47 @@ export const matchFoundItem = async (foundItem: any) => {
     const { score, reasons } =
       calculateMatchScore(lostItem, foundItem)
 
+    const foundUserId = foundItem.foundBy
+    const lostUserId = lostItem.userId
+
+    const [lostUserSnap, foundUserSnap] = await Promise.all([
+      getDoc(doc(db, "users", lostUserId)),
+      getDoc(doc(db, "users", foundUserId)),
+    ])
+
+    if (!lostUserSnap.exists() || !foundUserSnap.exists()) {
+      continue
+    }
+
+    const lostUserEmail = lostUserSnap.data().email
+    const foundUserEmail = foundUserSnap.data().email
+
+    console.log("lost email = ", lostUserEmail, "\nfound email = ", foundUserEmail)
+
     if (score >= 60) {
-      await addDoc(collection(db, "matches"), {
-        lostItemId: docSnap.id,
-        foundItemId: foundItem.id,
+      const matchRef = await addDoc(collection(db, "matches"), {
+        lostItemId: docSnap.id,        
+        foundItemId: foundItem.id,     
+        lostUserId,
+        foundUserId,
         score,
         reasons,
         status: "pending",
-        createdAt: Timestamp.now()
+        notified: false,
+        createdAt: Timestamp.now(),
+      })
+
+      createdMatches.push({
+        id: matchRef.id,
+        foundItemId: docSnap.id,
+        lostUserId,
+        lostUserEmail,
+        foundUserId,
+        foundUserEmail,
+        score
       })
     }
   }
+  return createdMatches
+
 }
