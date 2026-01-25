@@ -20,7 +20,7 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Invalid auth header" }, { status: 401 });
 
     const decoded = await adminAuth.verifyIdToken(token);
-    console.log("\ndecoded = \n", decoded)
+    // console.log("\ndecoded = \n", decoded)
     if (!decoded?.uid)
       return NextResponse.json({ error: "Invalid Firebase token" }, { status: 401 });
 

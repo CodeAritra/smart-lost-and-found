@@ -41,7 +41,7 @@ export async function POST(req: Request) {
       throw new Error("DOUBLE PREFIX BUG DETECTED in create-channel");
     }
 
-    console.log("\ncreator = ", creatorId, "\nothers = ", otherUserId)
+    // console.log("\ncreator = ", creatorId, "\nothers = ", otherUserId)
 
     if (creatorId === otherUserId) {
       return NextResponse.json(
@@ -60,7 +60,7 @@ export async function POST(req: Request) {
 
     try {
       await channel.create();
-      console.log(channel.state.members);
+      // console.log(channel.state.members);
     } catch (err: any) {
       if (err?.code !== 16) throw err;
     }

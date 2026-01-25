@@ -219,7 +219,7 @@ export default function VerifyOwnershipPage() {
             {error}
           </p>
 
-          <Button onClick={() => router.back()}>
+          <Button onClick={() => router.push("/dashboard")}>
             Go Back
           </Button>
         </Card>

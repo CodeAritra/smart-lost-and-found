@@ -18,10 +18,26 @@ export const reportLostItem = async (data: any) => {
   })
 
   //  AI MATCHMAKING (lost ➜ found)
-  await matchLostItem({
+  const matches = await matchLostItem({
     ...data,
     id: docRef.id,
   })
+
+  const strongMatches = matches.filter(m => m.score >= 75)
+  // console.log("\nstrong matches = ",strongMatches)
+
+  if (strongMatches.length > 0) {
+    // trigger backend notification
+    await fetch("/api/match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: strongMatches[0].lostUserEmail,
+        itemid : strongMatches[0].foundItemId,
+        score : strongMatches[0].score
+      }),
+    })
+  }
 
   return docRef.id
 }
@@ -36,10 +52,26 @@ export const reportFoundItem = async (data: any) => {
   })
 
   //  AI MATCHMAKING (found ➜ lost)
-  await matchFoundItem({
+  const matches = await matchFoundItem({
     ...data,
     id: docRef.id,
   })
+
+  const strongMatches = matches.filter(m => m.score >= 75)
+  // console.log("\nstrong matches = ",strongMatches)
+
+  if (strongMatches.length > 0) {
+    // trigger backend notification
+    await fetch("/api/match", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: strongMatches[0].foundUserEmail,
+        itemid : strongMatches[0].foundItemId,
+        score : strongMatches[0].score
+      }),
+    })
+  }
 
   return docRef.id
 }
@@ -49,7 +81,7 @@ export const reportFoundItem = async (data: any) => {
 export const approveClaim = async (
   itemId: string,
   claimerUserId: string,
-  status :string,
+  status: string,
   confidence?: number
 ) => {
   const itemRef = doc(db, "foundItems", itemId)
