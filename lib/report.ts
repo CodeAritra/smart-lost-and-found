@@ -67,7 +67,7 @@ export const reportFoundItem = async (data: any) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: strongMatches[0].lostUserEmail,
-        itemid : strongMatches[0].foundItemId,
+        itemid : docRef.id,
         score : strongMatches[0].score
       }),
     })

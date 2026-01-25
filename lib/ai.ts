@@ -80,7 +80,7 @@ You are generating ownership verification questions for a lost-and-found system.
 
 Rules:
 - Ask only questions that help verify true ownership
-- Ask minimum 2 and maximum 3 questions
+- Ask minimum 3 and maximum 5 questions
 - Questions must be specific
 - Do NOT reveal answers
 - Do NOT mention the signals directly
