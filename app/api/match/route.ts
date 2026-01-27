@@ -4,7 +4,7 @@ import nodemailer from "nodemailer"
 export async function POST(req: Request) {
   const { email, score, itemid } = await req.json()
   // Guard clauses
-  if (!email || !itemid || score < 75) {
+  if (!email || !itemid || score < 20) {
     return NextResponse.json(
       { message: "Invalid request" },
       { status: 400 }
