@@ -1,6 +1,6 @@
 export type Signals = {
   color: string | null;
-  brand: string | null;
+  // brand: string | null;
   damage: string | null;
   accessory: string | null;
   accessoryColor: string | null;
@@ -67,10 +67,10 @@ export function extractSignals(found: any): Signals {
       findColor(description) ||
       null,
 
-    brand:
-      found?.brand ||
-      findFromKeywords(description, BRAND_KEYWORDS) ||
-      null,
+    // brand:
+    //   found?.brand ||
+    //   findFromKeywords(description, BRAND_KEYWORDS) ||
+    //   null,
 
     // 🔐 Verification signals — NOT shown publicly
     damage: findFromKeywords(
