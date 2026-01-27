@@ -33,10 +33,10 @@ export const reportLostItem = async (data: any) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: strongMatches[0].lostUserEmail,
-        itemid : strongMatches[0].foundItemId,
-        score : strongMatches[0].score
+        itemid: strongMatches[0].foundItemId,
+        score: strongMatches[0].score
       }),
-    })
+    }).then(() => console.log("\nemail sent to = ", strongMatches[0].lostUserEmail))
   }
 
   return docRef.id
@@ -57,8 +57,8 @@ export const reportFoundItem = async (data: any) => {
     id: docRef.id,
   })
 
-  const strongMatches = matches.filter(m => m.score >= 75)
-  // console.log("\nstrong matches = ",strongMatches)
+  const strongMatches = matches.filter(m => m.score >= 40)
+  console.log("\nstrong matches = ",strongMatches)
 
   if (strongMatches.length > 0) {
     // trigger backend notification
@@ -67,10 +67,10 @@ export const reportFoundItem = async (data: any) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         email: strongMatches[0].lostUserEmail,
-        itemid : docRef.id,
-        score : strongMatches[0].score
+        itemid: docRef.id,
+        score: strongMatches[0].score
       }),
-    })
+    }).then(() => console.log("\nemail sent to = ", strongMatches[0].lostUserEmail))
   }
 
   return docRef.id
