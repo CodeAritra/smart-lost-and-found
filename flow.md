@@ -1,276 +1,276 @@
-# 🔍 Smart Lost & Found System — Updated End-to-End Flow
+# 🔍 Smart Lost & Found System
 
 ## 🎯 Objective
 
 To securely reunite lost items with their rightful owners using:
 
-* AI-guided dynamic input generation
-* Metadata + contextual matchmaking
-* Asymmetric AI-driven ownership verification
+- Metadata and contextual matchmaking
+- Asymmetric AI-driven ownership verification
 
-The system is designed to:
+The system is built to:
 
-* Minimize effort for finders
-* Prevent false claims
-* Handle collisions (similar or identical items)
-* Scale across multiple item categories
+- Minimize effort for finders
+- Prevent false or opportunistic claims
+- Handle identical or similar items
+- Scale across multiple item categories
 
 ---
 
-## 🧠 Core Design Principles
+## 🧠 Core Principles
 
-1. **Finder describes what they SEE** (observable facts only)
-2. **Owner proves what they KNOW** (private memory & context)
-3. **Public attributes are never used for verification**
-4. **When confidence is low, the system escalates — never guesses**
+1. **Finder reports only what they can see**
+2. **Owner proves ownership using private knowledge**
+3. **Public attributes help matching, never verification**
+4. **When confidence is low, the system escalates instead of guessing**
 
 ---
 
 ## 🔐 Step 0: User Authentication
 
-* Firebase Authentication (Google / Email)
-* Every report and claim is tied to a verified user ID
-* Prevents spam, abuse, and anonymous manipulation
+- Firebase Authentication (Google / Email)
+- Every report and claim is tied to a verified user ID
+- Prevents spam, abuse, and anonymous manipulation
 
 ---
 
-## 📥 Step 1: Found Item Report (Low-Friction Finder Flow)
+## 📥 Step 1: Found Item Report (Finder Flow)
+
+**Goal:** Fast, low-effort, and safe reporting.
 
 ### 1.1 Category Selection (Mandatory)
 
 Examples:
 
-* Phone
-* Wallet
-* ID Card
-* Keys
-* Bag
+- Phone
+- Wallet
+- ID Card
+- Keys
+- Bag
 
 Category selection acts as the **anchor signal** for AI input generation.
 
 ---
 
-### 1.2 AI-Guided Input Generation (Finder Side)
+### 1.2 Found Item Report (Finder Side)
 
-Instead of a fixed form, the system uses AI to dynamically generate **category-aware structured inputs**.
+The finder reports the item using a **fully manual input form**.  
+The system intentionally keeps this step simple and familiar to reduce friction and ensure quick reporting.
 
-**Design constraints:**
+**Design goals:**
 
-* No long descriptions
-* Mostly click-based
-* Only visually observable attributes
-* No private or guessable information
+- Easy to understand for any user
+- Fast submission with minimal thinking
+- Sufficient detail for downstream matching
+- No ownership verification at this stage
 
-#### Example: Phone (Found)
+---
 
-* Screen condition: intact / cracked
-* Case present: yes / no
-* Power state: on / off
-* Buttons visible: yes / unsure
-* Highlight any visible mark (tap on image)
+**Common Inputs (All Categories)**
 
-#### Example: Wallet (Found)
+- Item category
+- Brand (if visible)
+- Color
+- Size / type (small, medium, large, model type, etc.)
+- Short free-text description
+- Found location
+- Approximate found time
 
-* Material: leather / fabric / other
-* Thickness: thin / bulky
-* Attachment: chain / none
-* Condition: new / worn
-* Highlight any visible mark
+---
 
-⏱️ Average time: **20–40 seconds**
+**Example: Phone (Found)**
+
+- Brand: Samsung
+- Color: Black
+- Size / model (if known): Medium / Unknown
+- Condition: Screen cracked
+- Description: Phone found near bus stop, no power, back cover slightly loose
+
+---
+
+**Example: Wallet (Found)**
+
+- Brand: Local / Unknown
+- Color: Brown
+- Size: Medium
+- Material: Leather
+- Description: Worn-out wallet found near cafeteria
+
+---
+
+**Important Clarification**
+
+- These details are used **only for listing and AI matchmaking**
+- They are **converted into meta datas and are not publicly visible**
+- Visible attributes alone cannot grant ownership
+
+---
+
+> **Future Scope:**  
+> This manual input system can later be enhanced with structured or AI-assisted input generation to reduce ambiguity and improve match accuracy, without changing the security model.
 
 ---
 
 ### 1.3 Image Upload & Privacy Handling
 
-* Finder uploads an image (auto-converted to black & white)
-* Sensitive items:
-
-  * Images are masked or blurred in public view
-  * Personal identifiers are never shown
-
----
-
-### 1.4 System Metadata Capture
-
-Automatically stored by backend:
-
-* `createdAt` (server timestamp)
-* Found location (geo-hash)
-* Found time
-* Report status: `FOUND`
+- Finder uploads an image
+- Image is auto-processed:
+  - Converted to black & white
+  - Sensitive areas blurred or masked
+- Personal identifiers are never publicly shown
 
 ---
 
 ## 📤 Step 2: Lost Item Report (Owner Flow)
 
-If the owner cannot find their item in the found list:
+If the owner does not find their item in the public list:
 
-### 2.1 Lost Report Submission
+### 2.1 Lost Item Submission
 
 Owner provides:
 
-* Category
-* Description (short, optional)
-* Approximate lost location
-* Approximate time window
-* Optional image
-* Optional **private hints** (never public)
-
-System stores:
-
-* `createdAt` (server timestamp)
-* Status: `LOST`
+- Category
+- Short optional description
+- Approximate lost location
+- Approximate time window
+- Optional image
+- Optional **private hints** (never public)
 
 ---
 
-## 🔁 Step 3: Continuous AI Matchmaking (Event-Driven)
+## 🔁 Step 3: Continuous AI Matchmaking
 
-The AI matchmaking engine runs when:
+Triggered when:
 
-* A new found item is added
-* A new lost item is added
+- A new found item is added
+- A new lost item is reported
 
 ### 3.1 Matching Logic
 
-**Hard Filters:**
+**Hard Filters**
 
-* Same category
-* Reasonable time overlap
+- Same category
+- Reasonable time overlap
 
-**Soft Signals:**
+**Soft Signals**
 
-* Text similarity (NLP embeddings)
-* Location proximity
-* Image similarity (if available)
+- Text similarity (embeddings)
+- Location proximity
+- Image similarity (if available)
 
 > Brand, color, and visible attributes are used **only for matching**, never for verification.
 
-### 3.2 Match Notification
+---
 
-If match score ≥ threshold:
+## 🔔 Step 3.2: Smart Notifications
 
-* Owner is notified: "A potential match has been found"
-* Finder receives no owner details
+When match score crosses the threshold:
+
+### Owner Notification
+
+- Email
+- Message:
+  > “A potential match for your lost item has been found. Please verify ownership.”
+
+### Finder Notification
+
+- No owner details shared
+- Notified only after verification or handover stage
 
 ---
 
-## 🧠 Step 4: AI Ownership Verification (Critical Security Layer)
+## 🧠 Step 4: AI Ownership Verification
 
-Triggered when an owner clicks **Claim Ownership**.
+Triggered when the owner clicks **Claim Ownership**.
 
-### 4.1 Asymmetric AI Question Generation
+### 4.1 Asymmetric Question Generation
 
 AI generates **owner-only questions** based on:
 
-* Item category
-* Sensitivity level
-* Collision state (number of claimants)
+- Item category
+- Sensitivity level
+- Number of competing claimants
 
-❌ Questions never include public attributes (brand, color, visible marks)
-
----
-
-### 4.2 Question Types
-
-1. **Usage Memory**
-
-   * "What did you last use this item for?"
-
-2. **Internal / Hidden State**
-
-   * "Was anything loose, broken, or missing before you lost it?"
-
-3. **Negative Confirmation**
-
-   * "Which of these was NOT present?"
-
-4. **Contextual Recall**
-
-   * "Where were you coming from just before losing it?"
-
-Questions adapt in difficulty if multiple claimants exist.
+❌ Public attributes are never used.
 
 ---
 
-### 4.3 Confidence Scoring
+## 🔑 Step 5: In-App Chat Connection
 
-Each answer contributes to a weighted confidence score:
+After successful ownership verification, the system enables a **secure in-app chat** between the owner and the finder.
 
-* Private knowledge consistency
-* Contextual accuracy
-* Time alignment
-* Behavioral consistency (contradictions, hesitation)
+**Purpose:**
 
-Public attributes have **zero weight** here.
+- Coordinate handover details (time, place, confirmation)
+- Avoid sharing personal contact information
+- Keep all communication within the platform
 
----
+**Key Rules:**
 
-## 🧮 Step 5: Verification Decision
+- Chat is unlocked **only after verification**
+- No phone numbers or emails are exposed by default
+- All messages are logged for safety and audit purposes
 
-| Confidence Score | Action         |
-| ---------------- | -------------- |
-| ≥ 0.85           | Auto-verified  |
-| 0.60 – 0.85      | Admin review   |
-| < 0.60           | Claim rejected |
-
-Sensitive items require higher thresholds.
+This ensures smooth coordination while preserving privacy and preventing misuse.
 
 ---
 
-## ⚔️ Collision Handling: Identical Items
+## 🔄 End-to-End Workflow Scenario
 
-If two or more owners claim the same found item with identical metadata:
+### Scenario: A User Loses an Item
 
-* AI switches to **Collision Mode**
-* Question depth increases
-* Negative and contextual questions dominate
-* Scores are ranked
+#### Step A: User Login
 
-Outcomes:
-
-* One clear winner → verified
-* Close scores → admin / authority escalation
-* All low scores → no ownership granted
+1. The user logs into the system using **Firebase Authentication**  
+   → _(Step 0: User Authentication)_
 
 ---
 
-## 🔑 Step 6: Secure Handover
+#### Step B: User Searches Found Items
 
-Once ownership is verified:
-
-1. System generates OTP / QR code
-2. Finder and owner meet
-3. Both confirm exchange
-4. Status transition:
-
-```
-FOUND → CLAIMED → VERIFIED → HANDED_OVER → CLOSED
-```
-
-Audit logs are permanently stored.
+2. After logging in, the user checks the **Found Items List** to see if their lost item has already been reported.
 
 ---
 
-## 🛡️ Safety & Abuse Handling
+### Case 1: Item Is Found in the List
 
-* Finder never sees questions or answers
-* Owner never sees finder identity until verification
-* Rate limiting and device checks prevent spam
-* Timeouts trigger admin intervention
+_(Someone has already reported it as found)_
+
+3. The user finds a matching item in the found list.
+4. The user clicks **Claim Ownership**.  
+   → _(Step 4: AI Ownership Verification)_
+
+5. The system generates **owner-only verification questions**.
+6. The user answers the questions.
+7. If the confidence score crosses the verification threshold:
+   - Ownership is approved.
+
+8. The system enables a **secure in-app chat** between the owner and the finder.  
+   → _(Step 5: In-App Chat Connection)_
+
+9. Both users coordinate handover details inside the app.
+10. The item is returned successfully.
 
 ---
 
-## 🧠 System Guarantee
+### Case 2: Item Is NOT Found in the List
 
-> At no point does the system rely on self-declared ownership. Ownership is granted only through asymmetric private knowledge verification and confidence-based decisioning.
+3. The user does not find their item in the found list.
+4. The user submits a **Lost Item Report**.  
+   → _(Step 2: Lost Item Report)_
+
+5. The system stores the lost item and activates **continuous, event-driven AI matchmaking**.  
+   → _(Step 3: AI Matchmaking)_
+
+6. When a matching found item is later reported:
+   - The user receives an **email notification**.
+
+7. The user opens the notification and selects **Claim Ownership**.  
+   → _(Step 4: AI Ownership Verification)_
+
+8. After successful verification:
+   - The system unlocks the **secure in-app chat**.  
+     → _(Step 5: In-App Chat Connection)_
+
+9. The owner and finder communicate securely and complete the handover.
 
 ---
-
-## 🏆 Why This Works
-
-* Scales across item types
-* Low friction for good actors
-* High resistance to fraud
-* Clear escalation paths
-* Hackathon- and production-ready

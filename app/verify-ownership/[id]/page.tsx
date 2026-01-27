@@ -258,7 +258,7 @@ export default function VerifyOwnershipPage() {
             {decision === "claimed" &&
               "Ownership verified successfully. The item is now claimed."}
             {decision === "under_review" &&
-              "Your claim is under manual review due to item sensitivity."}
+              "Your claim is under manual review."}
             {decision === "unclaimed" &&
               "Verification failed."}
           </p>
